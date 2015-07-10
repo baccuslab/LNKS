@@ -3,4 +3,4 @@ This is a repository for tools to use Linear-Nonlinear-Kinetics-Spiking(LNKS) mo
 
 Reference: [Ozuysal and Baccus, Neuron, 2012](http://www.sciencedirect.com/science/article/pii/S0896627312000797)
 
-<a href="http://www.sciencedirect.com/science/article/pii/S0896627312000797" target="_blank">Ozuysal</a>
+Reference: <a href="http://www.sciencedirect.com/science/article/pii/S0896627312000797" target="_blank">Ozuysal and Baccus, Neuron 2012</a>
