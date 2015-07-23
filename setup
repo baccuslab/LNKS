@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+echo "Installing c extensions"
+echo
+
+
+python3 setup.py build_ext --inplace
