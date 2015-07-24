@@ -18,77 +18,72 @@ import pickle
 
 
 class Cell:
+    '''
+    Cell class for contrast adaptation experiment
+
+    Usage
+    -----
+    In [0]: g1 = Cell()
+    In [1]: g1.loadcell(options)  [options = {'filename', 'fc', 'threshold', 'filt_len', 'num_rep', 'gwin_len', 'gwin_std', 'apbflag'}]
+
+
+    Methods
+    -------
+        loadcell:
+            loads recording data(.mat files), given options
+
+        LNKS:
+            computes LNKS model of the cell
+
+        LNK:
+            computes LNK model of the cell
+
+        Spiking:
+            computes Spiking model of the cell
+
+        fit:
+            Fit model to the cell data given the objective and the model
+
+        predict:
+            Predict model estimate given the model and the parameters
+
+        saveresult:
+            save the optimization result to a file
+
+        loadresult:
+            laod the optimized result from a file
+
+    Values
+    ------
+        st (ndarray):
+            visual stimulus(averaged)
+
+        mp (ndarray):
+            membrane potential
+
+        sp (ndarray):
+            intracellular recording(membrane potential with spikes)
+
+        spk (ndarray):
+            spikes
+
+        fr (ndarray):
+            firing rates
+
+        stims (ndarray):
+            visual stimulus, 3 trials (3xN, N=300,000)
+
+        mps (ndarray):
+            membrane potentials, 3 trials (3xN, N=300,000)
+
+        spikes (ndarray):
+            spikes, 3 trials (3xN, N=300,000)
+
+        frs (ndarray):
+            firing rates, 3 trials (3xN, N=300,000)
+
+    '''
     def __init__(self):
-        '''
-        Cell class for contrast adaptation experiment
-
-        Usage
-        -----
-        In [0]: g1 = Cell()
-        In [1]: g1.loadcell(options)  [options = {'filename', 'fc', 'threshold', 'filt_len', 'num_rep', 'gwin_len', 'gwin_std', 'apbflag'}]
-
-
-        Methods
-        -------
-            loadcell:
-                loads recording data(.mat files), given options
-
-            LNKS:
-                computes LNKS model of the cell
-
-            LNK:
-                computes LNK model of the cell
-
-            Spiking:
-                computes Spiking model of the cell
-
-            fit:
-                Fit model to the cell data given the objective and the model
-
-            predict:
-                Predict model estimate given the model and the parameters
-
-            saveresult:
-                save the optimization result to a file
-
-            loadresult:
-                laod the optimized result from a file
-
-        Values
-        ------
-            st (ndarray):
-                visual stimulus(averaged)
-
-            mp (ndarray):
-                membrane potential
-
-            sp (ndarray):
-                intracellular recording(membrane potential with spikes)
-
-            spk (ndarray):
-                spikes
-
-            fr (ndarray):
-                firing rates
-
-            stims (ndarray):
-                visual stimulus, 3 trials (3xN, N=300,000)
-
-            mps (ndarray):
-                membrane potentials, 3 trials (3xN, N=300,000)
-
-            spikes (ndarray):
-                spikes, 3 trials (3xN, N=300,000)
-
-            frs (ndarray):
-                firing rates, 3 trials (3xN, N=300,000)
-
-        '''
-
-        self._num_rec = 0
-        self._num_apbrec = 0
-        self._datalen = 0
-
         '''
         Constructor:
             Creates cell object, and initializes hidden variables
@@ -99,6 +94,11 @@ class Cell:
                 _datalen (int):
                     Total length of the data, or the experiment
         '''
+
+        self._num_rec = 0
+        self._num_apbrec = 0
+        self._datalen = 0
+
 
 
     def loadcell(self, options):
