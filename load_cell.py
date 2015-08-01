@@ -37,12 +37,11 @@ class Cell(object):
             else:
                 return aa
 
-        self.mp_2D   = np.array(reshape_data(start, end, self.mp))
-        self.stim_2D = np.array(reshape_data(start, end, self.stim))
-        self.spikes_2D = np.array(reshape_data(start, end, self.spikes))
+        self.mp_2D   = np.array(reshape_data(start, end, self.mp)).reshape(-1, self.time_steps, 1)
+        self.stim_2D = np.array(reshape_data(start, end, self.stim)).reshape(-1, self.time_steps, 1)
+        self.spikes_2D = np.array(reshape_data(start, end, self.spikes)).reshape(-1, self.time_steps, 1)
         
     def get_dict(self):
-        pdb.set_trace()
         if not hasattr(self, 'stim_2D'):
             self.reshape()
 
@@ -51,3 +50,4 @@ class Cell(object):
         self.cell_dict['mp'] = self.mp_2D
         self.cell_dict['spikes'] = self.spikes_2D
 
+        return self.cell_dict

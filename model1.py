@@ -8,7 +8,7 @@ from keras.optimizers import RMSprop, SGD
 class model():
     def __init__(self):
         graph = Graph()
-        graph.add_input(name='stim', ndim=2)
+        graph.add_input(name='stim', ndim=3)
         #graph.add_input(name='spikes', ndim=3)
 
         """
