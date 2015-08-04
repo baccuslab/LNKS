@@ -8,9 +8,6 @@ import pdb
 path = 'data'
 class Cell(object):
     def __init__(self, cell_name, time_steps):
-        #if not sys.version_info < (3,):
-        #    raise ValueError('This code is designed to run in python 2.7')
-
         self.cell_name = cell_name
         self.time_steps = time_steps
 
@@ -41,6 +38,15 @@ class Cell(object):
         self.stim_2D = np.array(reshape_data(start, end, self.stim)).reshape(-1, self.time_steps, 1)
         self.spikes_2D = np.array(reshape_data(start, end, self.spikes)).reshape(-1, self.time_steps, 1)
         
+    def reshape3D(self, nb_samples=1):
+        '''
+        For Convolution1D, inputs have to be 3D tensors (nb_samples, steps, input_dim), I'm reshaping
+        inputs to match this definition
+        '''
+        self.stim   = np.array(self.stim).reshape(1, -1, 1)
+        self.spikes = np.array(self.spikes).reshape(1, -1, 1)
+        self.mp     = np.array(self.spikes).reshape(1, -1, 1)
+
     def get_dict(self):
         if not hasattr(self, 'stim_2D'):
             self.reshape()
