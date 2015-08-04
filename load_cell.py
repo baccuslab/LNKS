@@ -13,9 +13,9 @@ class Cell(object):
 
         data = scipy.io.loadmat(join(path,cell_name))
 
-        self.stim   = data['data'][:, 2].tolist()
-        self.mp     = data['data'][:, 0].tolist()
-        self.spikes   = data['data'][:, 1].tolist()
+        self.stim   = data['data'][:, 2]
+        self.mp     = data['data'][:, 0]
+        self.spikes   = data['data'][:, 1]
 
     def reshape(self, stride=1):
         '''
@@ -23,10 +23,15 @@ class Cell(object):
         where samples = (len(stim) - self.time_steps) / stride
         '''
 
+
+
         start = list(range(0, len(self.stim)-self.time_steps, stride))
         end = [s + self.time_steps for s in start]
 
         def reshape_data(start, end, data):
+            if type(data)==np.ndarray:
+                data = list(data)
+
             nb_samples = len(start)
             aa = map(lambda s,e, list_in : list_in[s:e], start, end, [data]*nb_samples) 
             if sys.version_info > (3,):
@@ -34,27 +39,27 @@ class Cell(object):
             else:
                 return aa
 
-        self.mp_2D   = np.array(reshape_data(start, end, self.mp)).reshape(-1, self.time_steps, 1)
-        self.stim_2D = np.array(reshape_data(start, end, self.stim)).reshape(-1, self.time_steps, 1)
-        self.spikes_2D = np.array(reshape_data(start, end, self.spikes)).reshape(-1, self.time_steps, 1)
+        self.mp_2D   = reshape_data(start, end, self.mp).reshape(-1, self.time_steps, 1)
+        self.stim_2D = reshape_data(start, end, self.stim).reshape(-1, self.time_steps, 1)
+        self.spikes_2D = reshape_data(start, end, self.spikes).reshape(-1, self.time_steps, 1)
         
     def reshape3D(self, nb_samples=1):
         '''
         For Convolution1D, inputs have to be 3D tensors (nb_samples, steps, input_dim), I'm reshaping
         inputs to match this definition
         '''
-        self.stim   = np.array(self.stim).reshape(1, -1, 1)
-        self.spikes = np.array(self.spikes).reshape(1, -1, 1)
-        self.mp     = np.array(self.spikes).reshape(1, -1, 1)
+        self.stim   = self.stim.reshape(1, -1, 1)
+        self.spikes = self.spikes.reshape(1, -1, 1)
+        self.mp     = self.spikes.reshape(1, -1, 1)
 
     def reshape4D(self, nb_samples=1):
         '''
         For Convolution1D, inputs have to be 3D tensors (nb_samples, steps, input_dim), I'm reshaping
         inputs to match this definition
         '''
-        self.stim   = np.array(self.stim).reshape(1, 1, -1, 1)
-        self.spikes = np.array(self.spikes).reshape(1, 1, -1, 1)
-        self.mp     = np.array(self.spikes).reshape(1, 1,-1, 1)
+        self.stim   = self.stim.reshape(1, 1, -1, 1)
+        self.spikes = self.spikes.reshape(1, 1, -1, 1)
+        self.mp     = self.spikes.reshape(1, 1,-1, 1)
 
     def get_dict(self):
         if not hasattr(self, 'stim_2D'):
@@ -85,3 +90,17 @@ class Cell(object):
 
         self.spikes = np.where( (self.spikes - self.spikes.min())/( self.spikes.max() - self.spikes.min()) > threshold, 
                 np.ones_like(self.spikes), np.zeros_like(self.spikes) )
+
+    def downsample(self, n):
+        '''
+        downsample stim, mp, spikes by a factor of n
+        '''
+        pdb.set_trace()
+
+        for k in ['spikes', 'mp', 'stim']:
+            raw = getattr(self, k)
+
+            N = len(raw)//n
+
+            raw = raw[:N*n].reshape(n,N).mean(axis=0)
+            setattr(self, k, raw)

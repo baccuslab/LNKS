@@ -93,8 +93,13 @@ class model2():
 
     def show_filters(self):
         filters = self.graph.params[0].eval()
+        fig, ax = plt.subplots(num='filters', nrows=2)
+
         for f in filters:
-            plt.plot(f.flatten())
+            ax[0].plot(f.flatten())
+
+
+        ax[1].plot(self.graph.params[2].eval()[0,:,0,0])
 
 
 def poisson_loss(y_true, y_pred):
