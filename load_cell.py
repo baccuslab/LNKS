@@ -47,6 +47,15 @@ class Cell(object):
         self.spikes = np.array(self.spikes).reshape(1, -1, 1)
         self.mp     = np.array(self.spikes).reshape(1, -1, 1)
 
+    def reshape4D(self, nb_samples=1):
+        '''
+        For Convolution1D, inputs have to be 3D tensors (nb_samples, steps, input_dim), I'm reshaping
+        inputs to match this definition
+        '''
+        self.stim   = np.array(self.stim).reshape(1, 1, -1, 1)
+        self.spikes = np.array(self.spikes).reshape(1, 1, -1, 1)
+        self.mp     = np.array(self.spikes).reshape(1, 1,-1, 1)
+
     def get_dict(self):
         if not hasattr(self, 'stim_2D'):
             self.reshape()
@@ -57,3 +66,22 @@ class Cell(object):
         self.cell_dict['spikes'] = self.spikes_2D
 
         return self.cell_dict
+
+    def get_spikes(self, threshold):
+        '''
+        change spikes to be a binary output, defining a spike whenever threshold is crossed.
+
+        input:
+        -----
+            threshold:  float in (0,1)
+                        defines what parts of the recording are defined as spikes (1) or no spikes (0)
+                        according to:
+                            
+                            (spikes - spikes.min())/( spikes.max() - spikes.min() )  > threshold 
+
+        '''
+        assert threshold <1, "get_spikes requires threhsold to be more than 0 and less than 1"
+        assert threshold >0, "get_spikes requires threhsold to be more than 0 and less than 1"
+
+        self.spikes = np.where( (self.spikes - self.spikes.min())/( self.spikes.max() - self.spikes.min()) > threshold, 
+                np.ones_like(self.spikes), np.zeros_like(self.spikes) )
