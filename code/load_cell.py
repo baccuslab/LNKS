@@ -112,3 +112,17 @@ class Cell(object):
 
             raw = raw[:N*n].reshape(n,N).mean(axis=0)
             setattr(self, k, raw)
+
+def allCells():
+    files = [f for f in listdir('data/') if f.endswith('.mat')]
+
+    cells = []
+
+    for f in files:
+        try:
+            cell_name = f.replace('.mat','')
+            cells.append(Cell(cell_name))
+            cells[-1].preprocess()
+            print('cell {0} loaded, spiking at {1}Hz'.format(f, cells[-1].fr))
+        except:
+            print('problem loading cell associated with mat file {0}'.format(f))

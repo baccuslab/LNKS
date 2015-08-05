@@ -1,7 +1,7 @@
 '''
 Models to predict membrane potential from spikes and stimulus
 '''
-from load_cell import Cell
+from code.load_cell import Cell
 from keras.models import Graph
 from keras.layers.core import Activation, Reshape
 from keras.layers.convolutional import Convolution1D, Convolution2D
