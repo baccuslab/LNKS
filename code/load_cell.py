@@ -7,7 +7,7 @@ import pdb
 
 path = 'data'
 class Cell(object):
-    def __init__(self, cell_name, time_steps):
+    def __init__(self, cell_name, time_steps=100):
         self.cell_name = cell_name
         self.time_steps = time_steps
 
@@ -16,6 +16,12 @@ class Cell(object):
         self.stim   = data['data'][:, 2]
         self.mp     = data['data'][:, 0]
         self.spikes   = data['data'][:, 1]
+
+
+    def preprocess(self):
+        self.stim -= self.stim.mean()
+        self.get_spikes()
+        self.reshape4D()
 
     def reshape(self, stride=1):
         '''
@@ -72,7 +78,7 @@ class Cell(object):
 
         return self.cell_dict
 
-    def get_spikes(self, threshold):
+    def get_spikes(self, threshold=0.8):
         '''
         change spikes to be a binary output, defining a spike whenever threshold is crossed.
 
@@ -90,6 +96,8 @@ class Cell(object):
 
         self.spikes = np.where( (self.spikes - self.spikes.min())/( self.spikes.max() - self.spikes.min()) > threshold, 
                 np.ones_like(self.spikes), np.zeros_like(self.spikes) )
+
+        self.fr = self.spikes.mean()*1000    # time is in ms
 
     def downsample(self, n):
         '''
