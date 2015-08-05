@@ -8,6 +8,7 @@ from keras.layers.convolutional import Convolution1D, Convolution2D
 from keras.activations import linear, relu
 from keras.layers.recurrent import LSTM, SimpleRNN
 from keras.optimizers import RMSprop, SGD
+from keras.regularizers import l1, l2, l1l2
 import theano.tensor as T
 from matplotlib import pyplot as plt
 
@@ -32,7 +33,8 @@ class model1():
 
         graph.add_output(name='mp', input='SimpleRNN')
         
-        graph.compile('rmsprop', {'mp':'mse'})
+        rmsprop = RMSprop(lr=1E-10)
+        graph.compile(rmsprop, {'mp':'mse'})
 
         self.graph = graph
 
@@ -43,7 +45,7 @@ class model2():
     The way I'm thinking about it both spikes and stim are just 1 sample with many many steps and one input_dim
     However I could split stim/spikes into shorter sequences and call each one of them a sample.
     '''
-    def __init__(self, f_size, nb_filters, conv2Dflag):
+    def __init__(self, f_size, nb_filters, conv2Dflag, lr=0.001):
         self.f_size = f_size
         self.nb_filters = nb_filters
         self.conv2Dflag = conv2Dflag
@@ -60,7 +62,7 @@ class model2():
         nl = 'softplus'
 
         if conv2Dflag:
-            graph.add_node(Convolution2D(nb_filters, 1, f_size, 1, activation=nl, border_mode='same'),
+            graph.add_node(Convolution2D(nb_filters, 1, f_size, 1, activation=nl, border_mode='same', W_regularizer=l1l2(.01)),
                     name='conv1', input='stim')
         else:
             graph.add_node(Convolution1D(1, nb_filters, f_size, activation=nl, border_mode='valid'),
@@ -85,11 +87,11 @@ class model2():
         self.graph = graph
         
 
-    def fit(self, stim, spikes):
+    def fit(self, stim, spikes, nb_epoch=20):
         if self.conv2Dflag:
-            self.graph.fit({'stim':stim, 'spikes':spikes}, nb_epoch=20)
+            self.graph.fit({'stim':stim, 'spikes':spikes}, nb_epoch=nb_epoch)
         else:
-            self.graph.fit({'stim':stim, 'spikes':spikes[:,:-(self.f_size-1),:]}, nb_epoch=20)
+            self.graph.fit({'stim':stim, 'spikes':spikes[:,:-(self.f_size-1),:]}, nb_epoch=nb_epoch)
 
     def show_filters(self):
         filters = self.graph.params[0].eval()
