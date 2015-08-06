@@ -89,7 +89,7 @@ def LNKS_fobj_helper(LNKS_f, theta, stim, y):
     '''
     LNKS model objective function helper function
 
-    Weighted sum of mean-square error
+    Weighted sum of log-likelihood and mean-square error
     '''
 
     J1 = _ot.log_fobj(LNKS_f, theta, stim, y)
