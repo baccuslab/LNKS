@@ -13,3 +13,7 @@ Clone the repo, and compile the c-extension
     $ cd LNKS
     $ ./setup
   
+Add `LNKS` directory path to the `PYTHONPATH`.
+
+## Tutorial
+Please see the examples in the `examples` sub-directory.
