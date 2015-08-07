@@ -64,7 +64,7 @@ class Cell:
         sp (ndarray):
             intracellular recording(membrane potential with spikes)
 
-        spk (ndarray):
+        spike (ndarray):
             spikes
 
         fr (ndarray):
@@ -541,7 +541,7 @@ class Cell:
             locs = [p[0] for p in _max]
             self.spikes[i,locs] = 1
 
-        self.spk = _np.sum(self.resps, 0) / N
+        self.spike = _np.sum(self.spikes, 0) / N
 
 
     def _set_fr(self, gwin_len, gwin_std):
