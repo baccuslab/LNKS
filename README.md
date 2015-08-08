@@ -6,3 +6,14 @@ This repository keeps the tools and examples for using Linear-Nonlinear-Kinetics
 <!-- Reference: [Ozuysal and Baccus, Neuron, 2012](http://www.sciencedirect.com/science/article/pii/S0896627312000797) -->
 Reference of LNK model and contrast adaptation: <a href="http://www.sciencedirect.com/science/article/pii/S0896627312000797" target="_blank">Ozuysal and Baccus, Neuron 2012</a>
 
+## Installation
+Clone the repo, and compile the c-extension
+
+    $ git clone https://github.com/baccuslab/LNKS.git
+    $ cd LNKS
+    $ ./setup
+  
+Add `LNKS` directory path to the `PYTHONPATH`.
+
+## Tutorial
+Please see the examples in the `examples` sub-directory.
