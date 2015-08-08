@@ -11,6 +11,7 @@ from keras.optimizers import RMSprop, SGD
 from keras.regularizers import l1, l2, l1l2
 import theano.tensor as T
 from matplotlib import pyplot as plt
+import pdb
 
 class model1(object):
     def __init__(self):
@@ -75,10 +76,10 @@ class model2D(object):
         
 
     def fit(self, cell, nb_epoch=20):
-        if cell.stim.ndim != 4:
+        if cell.st.ndim != 4:
             cell.reshape4D()
 
-        self.graph.fit({'stim':cell.stim, 'spikes':cell.spikes},
+        self.graph.fit({'stim':cell.st, 'spikes':cell.spike},
                 nb_epoch=nb_epoch)
 
     def show_filters(self):
@@ -134,10 +135,81 @@ class model1D(model2D):
         self.graph = graph
 
     def fit(self, cell, nb_epoch=20):
-        if cell.stim.ndim != 3:
+        if cell.st.ndim != 3:
             cell.reshape3D()
 
-        self.graph.fit({'stim':cell.stim, 'spikes':cell.spikes[:,:-(self.f_size-1),:]}
+        pdb.set_trace()
+        self.graph.fit({'stim':cell.st, 'spikes':cell.spike[:,:-(self.f_size-1),:]}
+                , nb_epoch=nb_epoch)
+
+class model1D_deep(model2D):
+    def __init__(self, f_sizes, nb_filters, reg=0.01, lr=0.01, nl='softplus'):
+        self.f_sizes = f_sizes
+        self.nb_filters = nb_filters
+        self.reg = reg
+        self.lr = lr
+        self.nl = nl
+        
+
+        assert len(nb_filters)==len(f_sizes), """
+            model1D_deep requires f_sizes and nb_filters to be iterables of the same length
+            len(f_sizes) = {0}
+            len(nb_filters) = {1}
+            """.format(len(f_sizes), len(nb_filters))
+
+
+        # first layer is different because the dimensionality of the input is 2, 
+        # (spikes and stim) for all other layers, dimensionality of input is
+        # the nb_filters computed in the previous layer
+        # I'm appending elements to the front of both f_sizes and nb_filters such that
+        # nb_filters[0]=2 and f_sizes is irrelevant but I want both list to still have
+        # the same length
+        f_sizes.insert(0, 0)
+        nb_filters.insert(0, 2)
+
+        nb_layers = len(f_sizes)
+
+        graph = Graph()
+
+        graph.add_input(name='stim', ndim=3)
+        graph.add_input(name='spikes', ndim=3)
+
+        graph.add_node(Activation(linear), merge_mode='concat',
+                name='conv_0', inputs=['stim', 'spikes'])
+
+        layers_to_concat_in_output = ['stim', 'spikes']
+        """    
+        graph.add_node(Convolution1D(nb_filters[0], nb_filters[1], f_sizes[1],
+            activation=nl, border_mode='same', W_regularizer=l2(reg)),
+                name='conv_1', input='conv_0')
+
+        layers_to_concat_in_output.append('conv_1')
+        """
+        for i in range(1, nb_layers):
+            graph.add_node(Convolution1D(nb_filters[i-1], nb_filters[i], f_sizes[i],
+                activation=nl, border_mode='same', W_regularizer=l2(reg)),
+                    name='conv_{0}'.format(i), input='conv_{0}'.format(i-1))
+
+            layers_to_concat_in_output.append('conv_{0}'.format(i))
+
+        # final convolution across the outputs of all the layers
+        graph.add_node(Convolution1D(sum(nb_filters), 1, 1, activation=nl, border_mode='valid'),
+                   name='final_conv', inputs=layers_to_concat_in_output)
+
+        graph.add_output(name='mp', input='final_conv')
+
+        rmsprop = RMSprop(lr=lr)
+        graph.compile(rmsprop, {'mp':poisson_loss})
+
+        self.graph = graph
+
+    def fit(self, cell, nb_epoch=20):
+        if cell.st.ndim != 3:
+            cell.reshape3D()
+
+        #final_size = cell.mp.shape[1] - sum(self.f_sizes) - len(self.f_sizes) + 1
+        #self.graph.fit({'stim':cell.st, 'spikes':cell.spike, 'mp':cell.mp[:,:final_size,:]}
+        self.graph.fit({'stim':cell.st, 'spikes':cell.spike, 'mp':cell.mp}
                 , nb_epoch=nb_epoch)
 
 def poisson_loss(y_true, y_pred):
