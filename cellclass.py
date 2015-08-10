@@ -55,7 +55,7 @@ class Cell:
 
     Values
     ------
-        st (ndarray):
+        stim (ndarray):
             visual stimulus(averaged)
 
         mp (ndarray):
@@ -125,7 +125,7 @@ class Cell:
         Computes LNKS model of the cell
         '''
 
-        st = self.st
+        st = self.stim
         st = st - _np.min(st)
         st = st / _np.max(st)
         st = st - _np.mean(st)
@@ -160,7 +160,7 @@ class Cell:
         Computes LNK model of the cell
         '''
 
-        st = self.st
+        st = self.stim
         st = st - _np.min(st)
         st = st / _np.max(st)
         st = st - _np.mean(st)
@@ -242,7 +242,7 @@ class Cell:
             self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
 
         elif model.lower() == "lnks":
-            st = self.st - _np.min(self.st)
+            st = self.stim - _np.min(self.stim)
             st = st / _np.max(st)
             st = st - _np.mean(st)
             fr = self.fr / _np.max(self.fr)
@@ -252,7 +252,7 @@ class Cell:
             self.result = _ot.optimize(fobj, f, theta, data, bnds, False, num_trials)
 
         elif model.lower() == "lnk":
-            st = self.st - _np.min(self.st)
+            st = self.stim - _np.min(self.stim)
             st = st / _np.max(st)
             st = st - _np.mean(st)
             mp = self.mp - _np.min(self.mp)
@@ -289,7 +289,7 @@ class Cell:
             self.est = f(theta, data[0])
 
         elif model.lower() == "lnks":
-            st = self.st - _np.min(self.st)
+            st = self.stim - _np.min(self.stim)
             st = st / _np.max(st)
             st = st - _np.mean(st)
             fr = self.fr / _np.max(self.fr)
@@ -301,7 +301,7 @@ class Cell:
             self.v_est = v
 
         elif model.lower() == "lnk":
-            st = self.st - _np.min(self.st)
+            st = self.stim - _np.min(self.stim)
             st = st / _np.max(st)
             st = st - _np.mean(st)
             mp = self.mp - _np.min(self.mp)
@@ -420,7 +420,7 @@ class Cell:
                 tempdata = _np.array(self._data[:,temp[0][1]])
                 self.stims[i,:] = _np.array(tempdata.T)
 
-            self.st = _np.sum(self.stims, 0) / self._num_apbrec
+            self.stim = _np.sum(self.stims, 0) / self._num_apbrec
 
         else:
             self.stims = _np.zeros([self._num_rec, self._datalen])
@@ -429,18 +429,18 @@ class Cell:
                 tempdata = _np.array(self._data[:,temp[0][1]])
                 self.stims[i,:] = _np.array(tempdata.T)
 
-            self.st = _np.sum(self.stims, 0) / self._num_rec
+            self.stim = _np.sum(self.stims, 0) / self._num_rec
 
 
     def _set_contrast(self, section_length=20000):
 
-        mu = _np.mean(self.st)
+        mu = _np.mean(self.stim)
 
-        num_section = _np.int(_np.floor(self.st.size / section_length))
+        num_section = _np.int(_np.floor(self.stim.size / section_length))
         contrast = _np.zeros(num_section)
 
         for i in range(num_section):
-            st = self.st[i*section_length : (i+1)*section_length]
+            st = self.stim[i*section_length : (i+1)*section_length]
             contrast[i] = _np.std(st) / mu
 
         self.contrast = contrast
