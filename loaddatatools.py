@@ -30,12 +30,14 @@ import cellclass
 import sys
 import platform
 import socket
+import os.path
 
 '''
 setting custom path
     path:
         the path to the directory where the data files are located.
 '''
+"""
 hostname = socket.gethostname()
 if 'corn' in hostname.lower():
     path = '~/lnks/data/'
@@ -46,7 +48,8 @@ elif 'sni-vcs-baccus' in hostname.lower():
 else:
     message = "Hostname: " + hostname + " is not known. The data path needs to be specified."
     sys.exit(message)
-
+"""
+path = 'data/'
 def loadcells(gwin_std=10):
     '''
     load all cells and returns cells structure(or dictionary)
@@ -127,7 +130,7 @@ def loadcell(cell_num, gwin_std=10):
 
 def g4(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g4.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -136,7 +139,7 @@ def g4(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
 
 def g6(fc=3, threshold=3, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g6.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -145,7 +148,7 @@ def g6(fc=3, threshold=3, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
 
 def g8(fc=3, threshold=3, filt_len=10, num_rep=2, gwin_len=1000, gwin_std=10):
     filename = 'g8.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -154,7 +157,7 @@ def g8(fc=3, threshold=3, filt_len=10, num_rep=2, gwin_len=1000, gwin_std=10):
 
 def g9(fc=3, threshold=5, filt_len=10, num_rep=2, gwin_len=1000, gwin_std=10):
     filename = 'g9.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -163,7 +166,7 @@ def g9(fc=3, threshold=5, filt_len=10, num_rep=2, gwin_len=1000, gwin_std=10):
 
 def g9apb(fc=3, threshold=5, filt_len=10, num_rep=2, gwin_len=1000, gwin_std=10):
     filename = 'g9.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -172,7 +175,7 @@ def g9apb(fc=3, threshold=5, filt_len=10, num_rep=2, gwin_len=1000, gwin_std=10)
 
 def g11(fc=3, threshold=1, filt_len=10, num_rep=10, gwin_len=1000, gwin_std=10):
     filename = 'g11.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -181,7 +184,7 @@ def g11(fc=3, threshold=1, filt_len=10, num_rep=10, gwin_len=1000, gwin_std=10):
 
 def g12(fc=10, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g12.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -190,7 +193,7 @@ def g12(fc=10, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
 
 def g13(fc=12, threshold=3, filt_len=10, num_rep=8, gwin_len=1000, gwin_std=10):
     filename = 'g13.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -199,7 +202,7 @@ def g13(fc=12, threshold=3, filt_len=10, num_rep=8, gwin_len=1000, gwin_std=10):
 
 def g15(fc=3, threshold=3, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g15.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -208,7 +211,7 @@ def g15(fc=3, threshold=3, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
 
 def g17(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g17.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -217,7 +220,7 @@ def g17(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
 
 def g17apb(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g17.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -226,7 +229,7 @@ def g17apb(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10
 
 def g19(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g19.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -235,7 +238,7 @@ def g19(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
 
 def g19apb(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g19.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -244,7 +247,7 @@ def g19apb(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10
 
 def g20(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g20.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': False}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)
@@ -253,7 +256,7 @@ def g20(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
 
 def g20apb(fc=3, threshold=5, filt_len=10, num_rep=5, gwin_len=1000, gwin_std=10):
     filename = 'g20.mat'
-    options = {'filename': path+filename, 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
+    options = {'filename': os.path.join(path, filename), 'fc': fc, 'threshold': threshold, 'filt_len': filt_len, 'num_rep': num_rep, 'gwin_len': gwin_len, 'gwin_std': gwin_std, 'apbflag': True}
 
     gcell = cellclass.Cell()
     gcell.loadcell(options)

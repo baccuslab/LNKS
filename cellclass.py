@@ -599,6 +599,11 @@ class Cell:
         templ = _dpt.lowpassfilter(_np.real(temph), filt_len, num_rep)
         self.mp = _np.real(templ)
 
+    def reshape3D(self):
+        self.st     = self.st.reshape(1, -1, 1)
+        self.spike  = self.spike.reshape(1, -1, 1)
+        self.mp     = self.mp.reshape(1, -1, 1)
+
 
 def main():
     filename = 'g12.mat'
