@@ -19,7 +19,8 @@ import numpy as np
 import pickle
 from keras.models import Graph
 from keras.layers.core import Activation, Reshape, Permute, Dense2D
-from keras.layers.convolutional import Convolution1D, Convolution2D, MaxPooling1D, MaxPooling2D, UpSample1D, UpSample2D
+from keras.layers.convolutional import Convolution1D, Convolution2D, MaxPooling1D, MaxPooling2D
+from keras.layers.extra import UpSample1D, UpSample2D
 from keras.regularizers import l1, l2, l1l2
 from keras.callbacks import Callback
 from keras.optimizers import RMSprop, SGD
@@ -41,7 +42,7 @@ def loadData(cell_define):
 	cells = ldt.loadcells()
 	cell = cells[cell_define]
 	# makes this rec_length by 2
-	X_train = np.hstack((cell.st[:rec_length, np.newaxis], cell.fr[:rec_length, np.newaxis]))
+	X_train = np.hstack((cell.stim[:rec_length, np.newaxis], cell.fr[:rec_length, np.newaxis]))
 	# makes this 1 by rec_length by 2
 	X_train = X_train[np.newaxis, :]
 	y_train = cell.mp[np.newaxis, :rec_length, np.newaxis]
@@ -53,7 +54,7 @@ def model1D(X_train, y_train, X_test, num_layers):
 	bmode = 'same'
 	init = 'uniform'
 	input_dim = 2
-	reg = 0.0
+	reg = 0.01
 	input = 'stim-fr'
 	out_arr = []
 	label = 1
@@ -62,7 +63,7 @@ def model1D(X_train, y_train, X_test, num_layers):
 		nb_filters = (i+1)*10
 		f_size = (num_layers - i)*100
 		name = 'conv'+str(label)
-		graph.add_node(Convolution1D(input_dim, nb_filters, f_size, init=init, activation='relu', border_mode=bmode, W_regularizer=l1l2(reg)),
+		graph.add_node(Convolution1D(input_dim, nb_filters, f_size, init=init, activation='relu', border_mode=bmode, W_regularizer=l1(reg)),
 						name=name, input=input)
 		if nb_filters>1:
 			label += 1
@@ -86,16 +87,16 @@ def model1D(X_train, y_train, X_test, num_layers):
 		input = out
 		out_arr.append(name)
 
-	graph.add_node(Dense2D(rec_length, num_layers, 1, W_regularizer=l1l2(reg)), 
+	graph.add_node(Dense2D(rec_length, num_layers, 1, W_regularizer=l1(reg)), 
 		name='weighted_sum', inputs=out_arr, merge_mode='concat')
 
-	graph.add_output(name='voltages', input='weighted_sum')
-	graph.compile('rmsprop', {'voltages':'mse'})
+	graph.add_output(name='loss', input='weighted_sum')
+	graph.compile('rmsprop', {'loss':'mse'})
 	history = LossHistory()
-	graph.fit({'stim-fr':X_train, 'voltages':y_train}, nb_epoch=num_epochs, verbose = 1, callbacks=[history])
+	graph.fit({'stim-fr':X_train, 'loss':y_train}, nb_epoch=num_epochs, verbose = 1, callbacks=[history])
 	graph.save_weights("weights" + str(num_epochs)+".hdf5", overwrite=True)
 	predictions = graph.predict({'stim-fr':X_test})
-	predictions = predictions['voltages'][0] #since we only have 1 training example
+	predictions = predictions['loss'][0] #since we only have 1 training example
 	print predictions.shape
 
 	#Figure to visualize predictions
