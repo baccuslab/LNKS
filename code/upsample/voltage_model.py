@@ -8,7 +8,7 @@
 	# f_size3 = 200
 	# nb_filters4 = 40
 	# f_size4 = 100 #smallest filters toward the end for more fine-grained context
-
+# Requires use of extra layers for Keras: https://github.com/anayebi/keras-extra
 import matplotlib
 #Force matplotlib to not use any Xwindows
 matplotlib.use('Agg')
