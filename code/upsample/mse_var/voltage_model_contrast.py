@@ -30,6 +30,11 @@ import matplotlib.pyplot as plt
 num_epochs = 1000
 rec_length = 150 #in seconds, max value is 300
 rec_length = 1000*rec_length
+cell_define = 'g11'
+cells = ldt.loadcells()
+cell = cells[cell_define]
+potential = cell.mp[:rec_length]
+var_sum = np.sum(np.array([np.exp2(np.std(potential[i:i+10000])) for i in xrange(0, potential.shape[0], 10000)]))
 
 class LossHistory(Callback):
 	def on_train_begin(self, logs={}):
@@ -38,15 +43,15 @@ class LossHistory(Callback):
 	def on_batch_end(self, batch, logs={}):
 		self.losses.append(logs.get('loss'))
 
-def loadData(cell_define):
-	cells = ldt.loadcells()
-	cell = cells[cell_define]
-	# makes this rec_length by 2
+def loadData():
 	X_train = np.hstack((cell.stim[:rec_length, np.newaxis], cell.fr[:rec_length, np.newaxis]))
 	# makes this 1 by rec_length by 2
 	X_train = X_train[np.newaxis, :]
 	y_train = cell.mp[np.newaxis, :rec_length, np.newaxis]
 	return X_train, y_train
+
+def mse_contrast(y_pred, y_true):
+	return T.sqr(y_pred - y_true).mean(axis=-1)/var_sum
 
 def model1D(X_train, y_train, X_test, num_layers):
 	graph = Graph()
@@ -121,8 +126,7 @@ def model1D(X_train, y_train, X_test, num_layers):
 
 	pickle.dump(history.losses, open("losshistory"+str(num_epochs)+".p", "wb"))
 
-cell_define = 'g11'
-[X_train, y_train] = loadData(cell_define)
+[X_train, y_train] = loadData()
 print X_train.shape
 print y_train.shape
 X_test = X_train
