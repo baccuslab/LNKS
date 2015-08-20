@@ -12,6 +12,7 @@ created: 2015-02-26
 import numpy as _np
 from scipy.optimize import minimize
 from scipy.stats import pearsonr
+import math
 
 def fobjective_numel(fobj, f, theta, data):
     '''
@@ -163,6 +164,61 @@ def diff_fobj(f, theta, x_in, y):
         J[i] = _np.sum(_np.abs(y[x_range] - y_est[x_range]) ** 2) * (weight**2)
 
     return _np.sum(J)
+
+def fft_fobj(y, y_est):
+    '''
+    compute the fft of the model output and compute the mse
+
+    y (ndarray)
+        output of the model
+    '''
+    f1 = 0
+    f2 = 4
+    f3 = 200
+    sec_len = 10000
+
+    temp = _np.zeros(round(len(y)/sec_len)-1)
+    temp2 = _np.zeros(round(len(y)/sec_len)-1)
+    temp3 = _np.zeros(round(len(y)/sec_len)-1)
+    temp4 = _np.zeros(round(len(y)/sec_len)-1)
+    mask = _np.zeros(len(y))
+    mask2 = _np.zeros(len(y))
+    bound1 = round(f2 * len(y)/1000)
+    bound2 = round(f3 * len(y)/1000)
+    bound3 = round(f1 * len(y)/1000)
+    bound4 = round(f2 * len(y)/1000)
+    mask[bound1:bound2] = 1
+    mask[-bound2:-bound1] = 1
+    mask2[bound3:bound4] = 1
+    mask2[-bound4:-bound3] = 1
+
+    F_true = _np.fft.fft(y)
+    F_est = _np.fft.fft(y_est)
+
+    y_hp = _np.fft.ifft(F_true * mask)
+    y_est_hp = _np.fft.ifft(F_est * mask)
+
+    y_lp = _np.fft.ifft(F_true * mask2)
+    y_est_lp = _np.fft.ifft(F_est * mask2)
+
+    y_bp = y - y_hp - y_lp
+    y_est_bp = y_est - y_est_hp - y_est_lp
+
+    len_sec = 10000
+    for k in range(5,len(temp)):
+        yrange = range( (k-1) * len_sec, k * len_sec)
+        temp[k-5] = norm_mse_fobj(y[yrange], y_est[yrange])
+        temp2[k-5] = norm_mse_fobj(y_hp[yrange], y_est_hp[yrange])
+        temp3[k-5] = norm_mse_fobj(y_lp[yrange], y_est_lp[yrange])
+        temp4[k-5] = norm_mse_fobj(y_bp[yrange], y_est_bp[yrange])
+
+    return _np.sum(temp + temp2 + temp3 + temp4)
+
+def norm_mse_fobj(y, y_est):
+    return mse_fobj(y, y_est) / (_np.std(y) ** 2)
+
+def mse_fobj(y, y_est):
+    return _np.sum( (y - y_est) ** 2)
 
 
 def fobj_numel_grad(fobj, f, theta, x_in, y):
