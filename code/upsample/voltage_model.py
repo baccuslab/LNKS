@@ -18,9 +18,9 @@ import loaddatatools as ldt
 import numpy as np
 import pickle
 from keras.models import Graph
-from keras.layers.core import Activation, Reshape, Permute, Dense2D
+from keras.layers.core import Activation, Reshape, Permute
 from keras.layers.convolutional import Convolution1D, Convolution2D, MaxPooling1D, MaxPooling2D
-from keras.layers.extra import UpSample1D, UpSample2D
+from keras.layers.extra import UpSample1D, UpSample2D, Dense2D
 from keras.regularizers import l1, l2, l1l2
 from keras.callbacks import Callback
 from keras.optimizers import RMSprop, SGD
