@@ -24,12 +24,19 @@ from keras.layers.extra import UpSample1D, UpSample2D, Dense2D
 from keras.regularizers import l1, l2, l1l2
 from keras.callbacks import Callback
 from keras.optimizers import RMSprop, SGD
+import theano
 import theano.tensor as T
 import matplotlib.pyplot as plt
 
 num_epochs = 1000
 rec_length = 150 #in seconds, max value is 300
 rec_length = 1000*rec_length
+cell_define = 'g11'
+cells = ldt.loadcells()
+cell = cells[cell_define]
+potential = cell.mp[:rec_length]
+var = np.array([np.square(np.std(potential[i:i+10000])) for i in xrange(0, potential.shape[0], 10000)])
+var = var[np.newaxis, :]
 
 class LossHistory(Callback):
 	def on_train_begin(self, logs={}):
@@ -38,15 +45,18 @@ class LossHistory(Callback):
 	def on_batch_end(self, batch, logs={}):
 		self.losses.append(logs.get('loss'))
 
-def loadData(cell_define):
-	cells = ldt.loadcells()
-	cell = cells[cell_define]
-	# makes this rec_length by 2
+def loadData():
 	X_train = np.hstack((cell.stim[:rec_length, np.newaxis], cell.fr[:rec_length, np.newaxis]))
 	# makes this 1 by rec_length by 2
 	X_train = X_train[np.newaxis, :]
 	y_train = cell.mp[np.newaxis, :rec_length, np.newaxis]
 	return X_train, y_train
+
+def mse_var(y_pred, y_true):
+	y_pred = T.reshape(y_pred, (y_pred.shape[0], y_pred.shape[1]/10000, 10000))
+	y_true = T.reshape(y_true, (y_true.shape[0], y_true.shape[1]/10000, 10000))
+	mse_slice = (T.sqr(y_pred - y_true)).mean(axis = -1)
+	return T.sum(mse_slice/var, axis = -1)
 
 def model1D(X_train, y_train, X_test, num_layers):
 	graph = Graph()
@@ -91,7 +101,7 @@ def model1D(X_train, y_train, X_test, num_layers):
 		name='weighted_sum', inputs=out_arr, merge_mode='concat')
 
 	graph.add_output(name='loss', input='weighted_sum')
-	graph.compile('rmsprop', {'loss':'mse'})
+	graph.compile('rmsprop', {'loss':mse_var})
 	history = LossHistory()
 	graph.fit({'stim-fr':X_train, 'loss':y_train}, nb_epoch=num_epochs, verbose = 1, callbacks=[history])
 	graph.save_weights("weights" + str(num_epochs)+".hdf5", overwrite=True)
@@ -121,8 +131,7 @@ def model1D(X_train, y_train, X_test, num_layers):
 
 	pickle.dump(history.losses, open("losshistory"+str(num_epochs)+".p", "wb"))
 
-cell_define = 'g11'
-[X_train, y_train] = loadData(cell_define)
+[X_train, y_train] = loadData()
 print X_train.shape
 print y_train.shape
 X_test = X_train
