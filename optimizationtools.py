@@ -172,47 +172,31 @@ def fft_fobj(y, y_est):
     y (ndarray)
         output of the model
     '''
-    f1 = 0
-    f2 = 4
-    f3 = 200
-    sec_len = 10000
+    # cutoff frequencies
+    N = len(y)  # number of points
+    fc_lp = 4   # low pass cutoff frequency
+    Fs = 1000   # sampling frequency
+    sec_len = 10000     # section length
 
-    temp = _np.zeros(round(len(y)/sec_len)-1)
-    temp2 = _np.zeros(round(len(y)/sec_len)-1)
-    temp3 = _np.zeros(round(len(y)/sec_len)-1)
-    temp4 = _np.zeros(round(len(y)/sec_len)-1)
-    mask = _np.zeros(len(y))
-    mask2 = _np.zeros(len(y))
-    bound1 = round(f2 * len(y)/1000)
-    bound2 = round(f3 * len(y)/1000)
-    bound3 = round(f1 * len(y)/1000)
-    bound4 = round(f2 * len(y)/1000)
-    mask[bound1:bound2] = 1
-    mask[-bound2:-bound1] = 1
-    mask2[bound3:bound4] = 1
-    mask2[-bound4:-bound3] = 1
+    temp = _np.zeros(round(N/sec_len))
+    temp_lp = _np.zeros(round(N/sec_len))
+    mask_lp = _np.zeros(N)
+    bound_lp = round(fc_lp * N/ Fs)
+    mask_lp[:bound_lp] = 1
+    mask_lp[N-1-bound_lp:] = 1
 
     F_true = _np.fft.fft(y)
     F_est = _np.fft.fft(y_est)
 
-    y_hp = _np.fft.ifft(F_true * mask)
-    y_est_hp = _np.fft.ifft(F_est * mask)
+    y_lp = _np.fft.ifft(F_true * mask_lp)
+    y_est_lp = _np.fft.ifft(F_est * mask_lp)
 
-    y_lp = _np.fft.ifft(F_true * mask2)
-    y_est_lp = _np.fft.ifft(F_est * mask2)
+    for k in range(len(temp)):
+        yrange = range(k * sec_len, (k+1) * sec_len)
+        temp[k] = norm_mse_fobj(y[yrange], y_est[yrange])
+        temp_lp[k] = norm_mse_fobj(y_lp[yrange], y_est_lp[yrange])
 
-    y_bp = y - y_hp - y_lp
-    y_est_bp = y_est - y_est_hp - y_est_lp
-
-    len_sec = 10000
-    for k in range(5,len(temp)):
-        yrange = range( (k-1) * len_sec, k * len_sec)
-        temp[k-5] = norm_mse_fobj(y[yrange], y_est[yrange])
-        temp2[k-5] = norm_mse_fobj(y_hp[yrange], y_est_hp[yrange])
-        temp3[k-5] = norm_mse_fobj(y_lp[yrange], y_est_lp[yrange])
-        temp4[k-5] = norm_mse_fobj(y_bp[yrange], y_est_bp[yrange])
-
-    return _np.sum(temp + temp2 + temp3 + temp4)
+    return _np.sum(temp + temp_lp)
 
 def norm_mse_fobj(y, y_est):
     return mse_fobj(y, y_est) / (_np.std(y) ** 2)
