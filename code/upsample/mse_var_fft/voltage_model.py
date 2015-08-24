@@ -64,18 +64,16 @@ def mse_var_fft(y_pred, y_true):
 	y_pred = T.reshape(y_pred, (y_pred.shape[0], y_pred.shape[1])) #make this 2D instead of 3D
 	y_true = T.reshape(y_true, (y_true.shape[0], y_true.shape[1])) #make this 2D instead of 3D
 	mask = T.zeros_like(y_true)
-	tmp_mask = T.set_subtensor(mask[:, 0:bound], 1)
-	final_mask = T.set_subtensor(tmp_mask[:, -bound:0], 1)
+	tmp_mask = T.set_subtensor(mask[:, :bound], 1)
+	final_mask = T.set_subtensor(tmp_mask[:, rec_length-1-bound:], 1)
 	F_true = fft(y_true, y_true.shape[1], axis=-1)
 	F_pred = fft(y_pred, y_pred.shape[1], axis=-1)
 	true_filt = F_true * final_mask
 	pred_filt = F_pred * final_mask
 	y_lp = ifft(true_filt, true_filt.shape[1], axis=-1)
 	y_predlp = ifft(pred_filt, pred_filt.shape[1], axis=-1)
-	# y_pred = T.reshape(y_pred, (y_pred.shape[0], y_pred.shape[1]/10000, 10000))
-	# y_true = T.reshape(y_true, (y_true.shape[0], y_true.shape[1]/10000, 10000))
-	# y_lp = T.reshape(y_lp, (y_lp.shape[0], y_lp.shape[1]/10000, 10000))
-	# y_predlp = T.reshape(y_predlp, (y_predlp.shape[0], y_predlp.shape[1]/10000, 10000))
+	y_lp = T.real(y_lp) #will originally have complex part 0 so we will remove that with this op
+	y_predlp = T.real(y_predlp) #will originally have complex part 0 so we will remove that with this op
 	tmp = mse_var(y_pred, y_true)
 	tmp2 = mse_var(y_predlp, y_lp)
 	return tmp + tmp2
