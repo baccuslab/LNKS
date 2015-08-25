@@ -3,5 +3,8 @@
 echo "Installing c extensions"
 echo
 
-
+CODEDIR="code/"
+CURRDIR=$PWD
+cd $CODEDIR
 python3 setup.py build_ext --inplace
+cd $CURRDIR
