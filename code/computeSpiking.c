@@ -701,7 +701,7 @@ void SC1DF(double *p, double *v, double *dv, double *r, int N) {
     ptr2[1] = p[6];
     ptr3[0] = p[7];
     ptr3[1] = p[8];
-    double *h, *fb, *fb1, *fb2, *rfb;
+    double *h, *fb, *fb1, *fb2, *fb3, *rfb;
     int i, k, l;
 
     h = createVector(N);
@@ -756,7 +756,7 @@ void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N
     ptr2[1] = p[6];
     ptr3[0] = p[7];
     ptr3[1] = p[8];
-    double *h, *fb, *fb1, *fb2, *rfb;
+    double *h, *fb, *fb1, *fb2, *fb3, *rfb;
     int i, k, l;
 
     h = createVector(N);
@@ -814,7 +814,7 @@ void SC1DF_get_h(double *p, double *v, double *dv, double *r, double *h, int N) 
     ptr2[1] = p[6];
     ptr3[0] = p[7];
     ptr3[1] = p[8];
-    double *fb, *fb1, *fb2, *rfb;
+    double *fb, *fb1, *fb2, *fb3, *rfb;
     int i, k, l;
 
     fb = createVector(lenP);
@@ -868,7 +868,7 @@ void SC1DF_get_m(double *p, double *v, double *dv, double *r, double *m, int N) 
     ptr2[1] = p[6];
     ptr3[0] = p[7];
     ptr3[1] = p[8];
-    double *h, *fb, *fb1, *fb2, *rfb;
+    double *h, *fb, *fb1, *fb2, *fb3, *rfb;
     int i, k, l;
 
     h = createVector(N);

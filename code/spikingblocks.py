@@ -277,6 +277,7 @@ def SC1DF(theta, x_in):
     t = _np.arange(len_fb)
     fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1])
     fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3])
+    fb3 = theta_fb[4] * _np.exp( -t / theta_fb[5])
     fb = (fb1 + fb2)/2
 
     return y, h, gain, fb, b
@@ -365,7 +366,8 @@ def SC1DF_bnds():
     '''
     return SCIF bound constraints.
     '''
-    bnds = ((None,None),(None,None),(None,None),(0,None),(0,None),(0,None),(0,None))
+    #bnds = ((None,None),(None,None),(None,None),(0,None),(0,None),(0,None),(0,None))
+    bnds = ((None,None),(None,None),(None,None),(0,None),(0,None),(0,None),(0,None),(0,None),(0,None))
 
     return bnds
 
