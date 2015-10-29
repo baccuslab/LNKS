@@ -11,13 +11,11 @@ created: 2015-02-24
 '''
 
 import numpy as _np
-from matplotlib import pyplot as _plt
 import spikingtools as _st
 from scipy.linalg import toeplitz as _tpltz
 import optimizationtools as _ot
 from scipy import interpolate as interp
 import analysistools as _at
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import dataprocesstools as _dpt
 
 
@@ -1596,133 +1594,6 @@ def resp2d(f, theta, X, Y, x, y, z):
 
 
 
-'''
-    2-dimensional Static Nonlinearity: average firing rate
-'''
-def SNL2d(x_in, y, v_range=[-0.1, 1.1], dv_range=[-60, 70], n_x1=101, n_x2=101, is_plot=[], filename=None):
-    '''
-    Input
-    -----
-    x_in (ndarray):
-        membrane potential input
-
-    y (ndarray):
-        firing rate
-
-    Output
-    ------
-    result (dictionary):
-        fr_snl2d (ndarray):
-            2-dimensional static nonlinearity
-        fr_avg2d (ndarray):
-            Average Firing Rate
-        fr_est (ndarray):
-            Firing rate estimate using 2D SNL
-        fig (figure object):
-            Average Firing Rate, 2-D SNL, fr_est plots
-
-    '''
-    dx_in = deriv(x_in, 0.001)
-
-    # meshgrid
-    n_v, n_dv = (n_x1, n_x2)
-    v_axis = _np.linspace(v_range[0], v_range[1], n_v)
-    dv_axis = _np.linspace(dv_range[0], dv_range[1], n_dv)
-
-    VV, dVV = _np.meshgrid(v_axis, dv_axis)
-    extent = [v_axis[0], v_axis[-1], dv_axis[0], dv_axis[-1]]
-
-    # Average Firing rate
-    fr_avg2d = get_averagefiring2d(VV, dVV, x_in, dx_in, y)
-
-    v_axis = _np.linspace(v_range[0], v_range[1], n_v-1)
-    dv_axis = _np.linspace(dv_range[0], dv_range[1], n_dv-1)
-
-    # 2D Interpolation function
-    finterp2d = interp.interp2d(v_axis, dv_axis, fr_avg2d, kind='linear')
-
-    # 2D Firing rate estimate(SNL 2D model)
-    fr_snl2d = finterp2d(v_axis, dv_axis)
-
-    # Firing rate estimation using 2D SNL model
-    fr_est = _np.zeros(x_in.shape)
-    for i in range(fr_est.size):
-        fr_est[i] = finterp2d(x_in[i], dx_in[i])
-
-    if len(is_plot):
-        num_figs = len(is_plot)
-
-        ### figure subplot grid (row = x, col = y)
-        plotsize_x = _np.int(_np.ceil(num_figs / 3))
-        plotsize_y = _np.int(_np.ceil(num_figs / plotsize_x))
-
-        fig = _plt.figure(figsize=(plotsize_y*5, plotsize_x*5))
-
-        m = 1
-        for i in is_plot:
-            ax = fig.add_subplot(plotsize_x, plotsize_y, m)
-
-            if i == 1:
-                ax.set_title('Average Firing Rate', fontsize=20, y=1.05)
-                ax.set_xlabel('$V$', fontsize=15)
-                ax.set_ylabel('$dV/dt$', fontsize=15)
-                im = _plt.imshow(fr_avg2d, interpolation='nearest', cmap='hot', vmin=0, vmax=_np.max(fr_avg2d), origin='low', aspect='auto', extent=extent)
-                divider = make_axes_locatable(ax)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                cbar = _plt.colorbar(cax=cax, ticks=[0, _np.max(fr_avg2d)])
-
-            elif i == 2:
-                ax.set_title('2-D Static Nonlinearity', fontsize=20, y=1.05)
-                ax.set_xlabel('$V$', fontsize=15)
-                ax.set_ylabel('$dV/dt$', fontsize=15)
-                im = _plt.imshow(fr_snl2d, interpolation='nearest', cmap='hot', vmin=0, vmax=_np.max(fr_snl2d), origin='low', aspect='auto', extent=extent)
-                divider = make_axes_locatable(ax)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                cbar = _plt.colorbar(cax=cax, ticks=[0, _np.max(fr_snl2d)])
-
-            elif i == 3:
-                ax.plot(y, 'b')
-                ax.plot(fr_est, 'r')
-                ax.set_title('Data vs. Model', fontsize=20, y=1.05)
-                ax.set_xlabel('Time $(s)$', fontsize=15)
-                ax.set_ylabel('Firing Rate$(Hz)$', fontsize=15)
-
-            else:
-                print('''
-                Input value error.
-
-                is_plot should be a list(ex: [1,2]) containing 1~2
-                defalut: is_plot = []
-
-                ex)
-                    is_plot = []
-                    is_plot = [1]
-                    is_plot = [1,2]
-
-                ''')
-
-            m += 1
-
-        fig.tight_layout()
-
-        if filename:
-            fig.savefig(filename, bbox_inches='tight')
-
-    else:
-        fig = None
-
-    corrcoef = _at.corrcoef(y, fr_est)
-
-    result = {
-            'fr_avg2d': fr_avg2d,
-            'fr_snl2d': fr_snl2d,
-            'fr_est': fr_est,
-            'corrcoef': corrcoef,
-            'fig': fig,
-            }
-
-    return result
-
 
 
 '''
@@ -1864,12 +1735,6 @@ def main():
     start_time = time.time()
     y = SCIF_C(theta, x)
     print("--- %s seconds ---" % str(time.time() - start_time))
-
-    _plt.plot(x,'b')
-    _plt.plot(y,'r')
-    _plt.plot(y1,'g')
-    _plt.show()
-
 
 if __name__ == '__main__':
     main()

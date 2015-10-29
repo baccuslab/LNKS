@@ -13,7 +13,6 @@ created: 2015-01-27
 
 import numpy as _np
 from scipy.linalg import orth as _orth
-from matplotlib import pyplot as _plt
 import kineticblocks as _kb
 import spikingblocks as _sb
 import optimizationtools as _ot
@@ -376,13 +375,6 @@ def main():
     start_time = time.time()
     f, g, u, K, X, v, r = LNKS(theta, stim)
     print("--- %s seconds ---" % str(time.time() - start_time))
-
-    _plt.figure(1)
-    _plt.subplot(211)
-    _plt.plot(v)
-    _plt.subplot(212)
-    _plt.plot(r)
-    _plt.show()
 
 
 if __name__ == '__main__':
