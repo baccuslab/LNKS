@@ -231,7 +231,7 @@ class Cell:
             'theta':
             'model':
         '''
-        if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df"]:
+        if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
 
             mp = self.mp - _np.min(self.mp)
             mp = mp / _np.max(mp)
@@ -278,7 +278,7 @@ class Cell:
         '''
         Predict model estimate
         '''
-        if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df"]:
+        if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
 
             mp = self.mp - _np.min(self.mp)
             mp = mp / _np.max(mp)
