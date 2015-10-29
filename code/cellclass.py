@@ -8,7 +8,6 @@ created: 2015-02-19
 '''
 import numpy as _np
 import scipy.io as _sio
-from matplotlib import pyplot as _plt
 from scipy.signal import find_peaks_cwt as _fpk
 from peakdetect import peakdetect as _pd
 import dataprocesstools as _dpt
@@ -608,7 +607,5 @@ def main():
     g.loadcell(options)
 
     print(g.fr.size)
-    _plt.plot(g.fr)
-    _plt.show()
 
 
