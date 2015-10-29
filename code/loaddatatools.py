@@ -42,7 +42,7 @@ if 'corn' in hostname.lower():
 elif 'bongsoo' in hostname.lower():
     path = '/Users/suh/Projects/expts/expt00/'
 elif 'sni-vcs-baccus' in hostname.lower():
-    path = '~/Projects/expts/expt00/'
+    path = '/home/bssuh/Projects/expts/expt00/'
 else:
     message = "Hostname: " + hostname + " is not known. The data path needs to be specified."
     sys.exit(message)
