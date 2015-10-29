@@ -191,7 +191,7 @@ def SC1D_1d(theta, x, dx):
 
     resp = sigmoid(theta.dot(X))
 
-    return resp 
+    return resp
 
 
 def SC1D_2d(theta, VV, dVV):
@@ -206,7 +206,7 @@ def SC1D_2d(theta, VV, dVV):
             dx = dVV[i,j]
             resp[i,j] = SC1D_1d(theta, x, dx)
 
-    return resp 
+    return resp
 
 def SC1D_gain(theta, x_in):
     '''
@@ -237,7 +237,7 @@ def SC1D_gain(theta, x_in):
     y_est = sigmoid(theta.dot(X))
     gain = y_est * (1 - y_est) * theta[1]
 
-    return gain 
+    return gain
 
 
 
@@ -247,7 +247,7 @@ def SC1D_gain(theta, x_in):
 def SC1DF(theta, x_in):
     '''
     Spiking Continuous 1-D model.
-    Compute the very basic continuous 1D nonlinearity(sigmoid) spiking block.
+    Compute the very basic continuous 1D nonlinearity(sigmoid) spiking block with feedback.
     The 1D nonlinearity is a function of x and dx/dt.
 
     Input
@@ -275,8 +275,8 @@ def SC1DF(theta, x_in):
     theta_fb = theta[3:]
     len_fb = 5000
     t = _np.arange(len_fb)
-    fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1]) 
-    fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3]) 
+    fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1])
+    fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3])
     fb = (fb1 + fb2)/2
 
     return y, h, gain, fb, b
@@ -379,7 +379,7 @@ def SC1DF_1d(theta, x, dx):
 
     resp = sigmoid(theta.dot(X))
 
-    return resp 
+    return resp
 
 
 def SC1DF_2d(theta, VV, dVV):
@@ -394,7 +394,7 @@ def SC1DF_2d(theta, VV, dVV):
             dx = dVV[i,j]
             resp[i,j] = SC1DF_1d(theta, x, dx)
 
-    return resp 
+    return resp
 
 def SC1DF_gain(theta, x_in):
     '''
@@ -418,7 +418,7 @@ def SC1DF_gain(theta, x_in):
     dx_in = deriv(x_in, 0.001)
     gain = _st.SC1DF_gain(theta, x_in, dx_in)
 
-    return gain 
+    return gain
 
 
 def SC1DF_constFB(theta, x_in):
@@ -432,7 +432,7 @@ def SC1DF_constFB(theta, x_in):
     mean_b = _np.mean(b)
 
     h_const = x_in + mean_b
-    
+
     y = SC1D(theta[:3], h_const)
     gain = SC1D_gain(theta[:3], h_const)
 
@@ -508,7 +508,7 @@ def SCm(theta, x_in):
     X[6,:] = (x_in ** 2) * (dx_in)
     X[7,:] = (x_in) * (dx_in ** 2)
     X[8,:] = (x_in ** 2) * (dx_in ** 2)
-    X[9,:] = (x_in ** 3) 
+    X[9,:] = (x_in ** 3)
     X[10,:] = (dx_in ** 3)
 
 
@@ -540,7 +540,7 @@ def SC1_2d(theta, VV, dVV):
             X = _np.array([1, VV[i,j], dVV[i,j]])
             resp[i,j] = sigmoid(theta.dot(X))
 
-    return resp 
+    return resp
 
 def SCm_2d(theta, VV, dVV):
     '''
@@ -553,7 +553,7 @@ def SCm_2d(theta, VV, dVV):
             X = _np.array([1, VV[i,j]**2, VV[i,j]*dVV[i,j], dVV[i,j]**2])
             resp[i,j] = sigmoid(theta.dot(X))
 
-    return resp 
+    return resp
 
 '''
     Spiking Continuous(SC) objective functions, gradient, gain
@@ -653,7 +653,7 @@ def SC_gain(theta, x_in):
     y_est = sigmoid(theta.dot(X))
     gain = y_est * (1 - y_est) * (theta.dot(C_mat))
 
-    return gain 
+    return gain
 
 
 '''
@@ -704,7 +704,7 @@ def SCI_2d(theta, VV, dVV):
             Y = _np.array([0, 0, 1, dVV[i,j]])
             resp[i,j] = sigmoid(theta.dot(X))*sigmoid(theta.dot(Y))
 
-    return resp 
+    return resp
 
 
 
@@ -861,7 +861,7 @@ def SCIF(theta, x_in):
     gain (ndarray):
         The instantaneous gain
     '''
-    
+
 
     y = SCIF_C(theta, x_in)
 
@@ -910,7 +910,7 @@ def SCIF_constFB(theta, x_in):
     mean_b = _np.mean(b)
 
     h_const = x_in + mean_b
-    
+
     y = SCI(theta[:4], h_const)
     gain = SCI_gain(theta[:4], h_const)
 
@@ -963,7 +963,7 @@ def SCIF2(theta, x_in):
     gain (ndarray):
         The instantaneous gain
     '''
-    
+
 
     y = SCIF2_C(theta, x_in)
 
@@ -1012,7 +1012,7 @@ def SCIF2_constFB(theta, x_in):
     mean_b = _np.mean(b)
 
     h_const = x_in + mean_b
-    
+
     y = SCI(theta[:4], h_const)
     gain = SCI_gain(theta[:4], h_const)
 
@@ -1170,9 +1170,9 @@ def SCIE_1d(theta, x, dx):
     Y = _np.array([0, 0, 1, dx, 0, 0, 0, 0, 0, 0])
     Z = _np.array([0, 0, 0, 0, 1, x, dx, x*dx, x**2, dx**2])
 
-    resp = sigmoid(theta.dot(X)) * sigmoid(theta.dot(Y)) * sigmoid(theta.dot(Z)) 
+    resp = sigmoid(theta.dot(X)) * sigmoid(theta.dot(Y)) * sigmoid(theta.dot(Z))
 
-    return resp 
+    return resp
 
 
 def SCIE_2d(theta, VV, dVV):
@@ -1190,9 +1190,9 @@ def SCIE_2d(theta, VV, dVV):
             Y = _np.array([0, 0, 1, dx, 0, 0, 0, 0, 0, 0])
             Z = _np.array([0, 0, 0, 0, 1, x, dx, x*dx, x**2, dx**2])
 
-            resp[i,j] = sigmoid(theta.dot(X)) * sigmoid(theta.dot(Y)) * sigmoid(theta.dot(Z)) 
+            resp[i,j] = sigmoid(theta.dot(X)) * sigmoid(theta.dot(Y)) * sigmoid(theta.dot(Z))
 
-    return resp 
+    return resp
 
 def SCIE_gain(theta, x_in):
     '''
@@ -1312,7 +1312,7 @@ def SCIEF(theta, x_in):
     gain (ndarray):
         The instantaneous gain
     '''
-    
+
 
     dx_in = deriv(x_in, 0.001)
     y = _st.SCIEF(theta, x_in, dx_in)
@@ -1323,8 +1323,8 @@ def SCIEF(theta, x_in):
     theta_fb = theta[10:]
     len_fb = 5000
     t = _np.arange(len_fb)
-    fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1]) 
-    fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3]) 
+    fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1])
+    fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3])
     fb = (fb1 + fb2)/2
 
     return y, h, gain, fb, b
@@ -1387,13 +1387,13 @@ def SCIEF_constFB(theta, x_in):
     mean_b = _np.mean(b)
 
     h_const = x_in + mean_b
-    
+
     y = SCIE(theta[:10], h_const)
     gain = SCIE_gain(theta[:10], h_const)
 
     return y, gain
 '''
-   Additional functions 
+   Additional functions
 '''
 def sigmoid(x):
     '''
@@ -1493,7 +1493,7 @@ def hist2d(X, Y, x, y, z):
 
     hist[_np.isnan(hist)] = 0
 
-    return hist 
+    return hist
 
 def get_averagefiring2d(X, Y, x, y, z):
     '''
@@ -1745,7 +1745,7 @@ def SDF(theta, x_in, gwin_std=10, gwin_len=1000):
     r (ndarray):
         output firing rate response
     '''
-    
+
     spikes = _st.SDF(theta, x_in)
     r = _dpt.Spk2FR_1(spikes.T, gwin_len, gwin_std)
 
@@ -1768,7 +1768,7 @@ def SDF_C(theta, x_in):
     r (ndarray):
         output response(spikes: 1's and 0's), 1's indicate spikes.
     '''
-    
+
     r = _st.SDF(theta, x_in)
 
     return r
@@ -1808,7 +1808,7 @@ def SDF_orig(theta, x_in):
     # feedback filter
     len_filt_fb = 1000
     t_fb = _np.arange(len_filt_fb)
-    filt_fb = (-amp1 * _np.exp(-t_fb / tau1)) + (-amp2 * _np.exp(-t_fb / tau2)) 
+    filt_fb = (-amp1 * _np.exp(-t_fb / tau1)) + (-amp2 * _np.exp(-t_fb / tau2))
     filt_fb /= 2
 
     # internal variable
@@ -1817,7 +1817,7 @@ def SDF_orig(theta, x_in):
         g[i] += x_in[i]
         if (g[i] > thr) and (g[i] > g[i-1]):
             r[i] = 1
-            
+
             if (i < N - len_filt_fb):
                 #print(len(g[i+1:i+1+len_filt_fb]), len(filt_fb))
                 g[i+1:i+1+len_filt_fb] += filt_fb
@@ -1857,8 +1857,8 @@ def main():
     theta[3] = 0.1
     theta[4] = 0.1
     theta[5] = 100
-    #y = SC(theta, x) 
-    y1 = SCI(theta[:4], x) 
+    #y = SC(theta, x)
+    y1 = SCI(theta[:4], x)
     start_time = time.time()
     y = SCIF_C(theta, x)
     print("--- %s seconds ---" % str(time.time() - start_time))

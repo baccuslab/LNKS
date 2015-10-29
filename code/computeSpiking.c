@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define lenP 5000
+#define lenP 10000
 
 /*
  * SC1DF
@@ -694,10 +694,13 @@ void SC1DF(double *p, double *v, double *dv, double *r, int N) {
 
     double ptr1[2] = {0.0, 0.0};
     double ptr2[2] = {0.0, 0.0};
+    double ptr3[2] = {0.0, 0.0};
     ptr1[0] = p[3];
     ptr1[1] = p[4];
     ptr2[0] = p[5];
     ptr2[1] = p[6];
+    ptr3[0] = p[7];
+    ptr3[1] = p[8];
     double *h, *fb, *fb1, *fb2, *rfb;
     int i, k, l;
 
@@ -705,8 +708,9 @@ void SC1DF(double *p, double *v, double *dv, double *r, int N) {
     fb = createVector(lenP);
     fb1 = expfeedbackfilter(ptr1, lenP); 
     fb2 = expfeedbackfilter(ptr2, lenP); 
+    fb3 = expfeedbackfilter(ptr3, lenP); 
     for (i=0; i<lenP; i++) {
-        fb[i] = (fb1[i] + fb2[i])/2;
+        fb[i] = fb1[i] + fb2[i] + fb3[i];
     }
     rfb = createVector(lenP);
 
@@ -745,10 +749,13 @@ void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N
 
     double ptr1[2] = {0.0, 0.0};
     double ptr2[2] = {0.0, 0.0};
+    double ptr3[2] = {0.0, 0.0};
     ptr1[0] = p[3];
     ptr1[1] = p[4];
     ptr2[0] = p[5];
     ptr2[1] = p[6];
+    ptr3[0] = p[7];
+    ptr3[1] = p[8];
     double *h, *fb, *fb1, *fb2, *rfb;
     int i, k, l;
 
@@ -756,8 +763,9 @@ void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N
     fb = createVector(lenP);
     fb1 = expfeedbackfilter(ptr1, lenP); 
     fb2 = expfeedbackfilter(ptr2, lenP); 
+    fb3 = expfeedbackfilter(ptr3, lenP); 
     for (i=0; i<lenP; i++) {
-        fb[i] = (fb1[i] + fb2[i])/2;
+        fb[i] = fb1[i] + fb2[i] + fb3[i];
     }
     rfb = createVector(lenP);
 
@@ -799,18 +807,22 @@ void SC1DF_get_h(double *p, double *v, double *dv, double *r, double *h, int N) 
 
     double ptr1[2] = {0.0, 0.0};
     double ptr2[2] = {0.0, 0.0};
+    double ptr3[2] = {0.0, 0.0};
     ptr1[0] = p[3];
     ptr1[1] = p[4];
     ptr2[0] = p[5];
     ptr2[1] = p[6];
+    ptr3[0] = p[7];
+    ptr3[1] = p[8];
     double *fb, *fb1, *fb2, *rfb;
     int i, k, l;
 
     fb = createVector(lenP);
     fb1 = expfeedbackfilter(ptr1, lenP); 
     fb2 = expfeedbackfilter(ptr2, lenP); 
+    fb3 = expfeedbackfilter(ptr3, lenP); 
     for (i=0; i<lenP; i++) {
-        fb[i] = (fb1[i] + fb2[i])/2;
+        fb[i] = fb1[i] + fb2[i] + fb3[i];
     }
     rfb = createVector(lenP);
 
@@ -849,10 +861,13 @@ void SC1DF_get_m(double *p, double *v, double *dv, double *r, double *m, int N) 
 
     double ptr1[2] = {0.0, 0.0};
     double ptr2[2] = {0.0, 0.0};
+    double ptr3[2] = {0.0, 0.0};
     ptr1[0] = p[3];
     ptr1[1] = p[4];
     ptr2[0] = p[5];
     ptr2[1] = p[6];
+    ptr3[0] = p[7];
+    ptr3[1] = p[8];
     double *h, *fb, *fb1, *fb2, *rfb;
     int i, k, l;
 
@@ -860,8 +875,9 @@ void SC1DF_get_m(double *p, double *v, double *dv, double *r, double *m, int N) 
     fb = createVector(lenP);
     fb1 = expfeedbackfilter(ptr1, lenP); 
     fb2 = expfeedbackfilter(ptr2, lenP); 
+    fb3 = expfeedbackfilter(ptr3, lenP); 
     for (i=0; i<lenP; i++) {
-        fb[i] = (fb1[i] + fb2[i])/2;
+        fb[i] = fb1[i] + fb2[i] + fb3[i];
     }
     rfb = createVector(lenP);
 

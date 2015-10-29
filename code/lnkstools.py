@@ -13,7 +13,7 @@ created: 2015-01-27
 
 import numpy as _np
 from scipy.linalg import orth as _orth
-from matplotlib import pyplot as _plt 
+from matplotlib import pyplot as _plt
 import kineticblocks as _kb
 import spikingblocks as _sb
 import optimizationtools as _ot
@@ -52,7 +52,7 @@ def LNKS(theta, stim, pathway=1):
         The responses of four states(R, A, I1, I2).
 
     v (ndarray):
-        The LNK model output(membrane potential). 
+        The LNK model output(membrane potential).
 
     r (ndarray):
         The LNKS model output.
@@ -71,7 +71,7 @@ def LNKS_f(theta, stim, pathway=1):
     f, g, u, thetaK, X, v, r = LNKS(theta, stim, pathway=pathway)
 
     return r
-    
+
 
 def LNKS_fobj(theta, stim, y):
     '''
@@ -116,7 +116,7 @@ def LNKS_bnds(theta=None, bnd_mode=0):
         this is used with fitmodel.py (3x-optim/LNKS/program/)
     '''
 
-    if bnd_mode == 0: 
+    if bnd_mode == 0:
         bnds = None
 
     elif bnd_mode == 1:
@@ -166,7 +166,7 @@ def LNK(theta, stim, pathway=1):
         The responses of four states(R, A, I1, I2).
 
     v (ndarray):
-        The LNK model output. 
+        The LNK model output.
 
     '''
     basis = LinearFilterBasis_8param()
@@ -177,7 +177,7 @@ def LNK(theta, stim, pathway=1):
     # one pathway
     if pathway == 1:
         # Compute the linear filter and find the filtered output
-        f = basis.dot(theta[:numBasis]) 
+        f = basis.dot(theta[:numBasis])
         g = _np.convolve(nzstim, f)
         g = g[:lenStim]
 
@@ -210,7 +210,7 @@ def LNK_f(theta, stim, pathway=1):
     f, g, u, thetaK, X, v = LNK(theta, stim, pathway=pathway)
 
     return v
-    
+
 
 def LNK_fobj(theta, stim, y):
     '''
@@ -285,7 +285,7 @@ def Kinetics(p, Xinit, xinput):
     # Compute Kinetics block
     #X = _kb.K4S(p, Xinit, xinput)
 
-    # Fast Kinetics block computation 
+    # Fast Kinetics block computation
     X =  _kb.K4S_C(p, Xinit, xinput)
 
     return X
@@ -293,7 +293,7 @@ def Kinetics(p, Xinit, xinput):
 
 def Spiking(theta, x_in):
     '''
-    Compute firing rate transformation from membrane potential 
+    Compute firing rate transformation from membrane potential
 
     Input
     -----
