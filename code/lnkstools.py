@@ -57,9 +57,14 @@ def LNKS(theta, stim, pathway=1):
         The LNKS model output.
 
     '''
+
+    # compute LNK model
     f, g, u, thetaK, X, v = LNK(theta[:17], stim, pathway=1)
-    #r = Spiking(v, theta[16:])
-    r = _sb.SCIE(theta[17:], v)
+
+    # Comptue Spiking model
+    # Running fast c-extension
+    # To get the internal variables of the spiking block, use Spiking method.
+    r = _sb.SC1DF_C(theta[17:], v)
 
     return f, g, u, thetaK, X, v, r
 
@@ -301,7 +306,7 @@ def Spiking(theta, x_in):
     ------
     '''
 
-    y, h, gain = SCIF(theta, x_in)
+    y, h, gain, fb, b = SC1DF(theta, x_in)
 
     return y, h, gain
 
