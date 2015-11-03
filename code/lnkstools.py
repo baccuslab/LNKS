@@ -70,16 +70,16 @@ def LNKS(theta, stim, pathway=1):
 
 def LNKS_f(theta, stim, pathway=1):
     '''
-    compute LNKS model for optimization
+    compute LNKS model for optimization using only firing rate as output
     '''
     f, g, u, thetaK, X, v, r = LNKS(theta, stim, pathway=pathway)
 
     return r
 
 
-def LNKS_fobj(theta, stim, y):
+def LNKS_fobj(theta, stim, y, pathway=1):
     '''
-    LNKS model objective function
+    LNKS model objective function for using only firing rate as output
     '''
     #J, grad = _ot.fobjective_numel(LNK_fobj_helper, LNK_f, theta, (stim, y))
 
@@ -87,6 +87,44 @@ def LNKS_fobj(theta, stim, y):
     J = LNKS_fobj_helper(LNKS_f, theta, stim, y)
 
     return J
+
+
+def LNKS_MP_f(theta, stim, pathway=1):
+    '''
+    compute LNKS model for optimization using both membrane potential and firing rate
+    '''
+    f, g, u, thetaK, X, v, r = LNKS(theta, stim, pathway=pathway)
+
+    return v, r
+
+
+def LNKS_MP_fobj(theta, stim, y_data, pathway=1):
+    '''
+    LNKS model objective function for using both membrane potential and firing rate
+
+    Inputs
+    ------
+        theta: model parameters
+        stim: input data
+        y_data: output data tuple (mp, fr)
+
+    Outputs
+    -------
+        J: objective value
+        grad: objective gradient
+
+    '''
+
+    #J, grad = _ot.fobjective_numel(LNK_fobj_helper, LNK_f, theta, (stim, y))
+    y_mp = y_data[0]
+    y_fr = y_data[1]
+
+    y_mp_est, y_fr_est = LNKS_MP_f(theta, stim, pathway=1):
+    #return J, grad
+    J = LNKS_fobj_helper(LNKS_f, theta, stim, y)
+
+    return J
+
 
 
 def LNKS_fobj_helper(LNKS_f, theta, stim, y):
@@ -102,7 +140,7 @@ def LNKS_fobj_helper(LNKS_f, theta, stim, y):
 
     return J
 
-def LNKS_bnds(theta=None, bnd_mode=0):
+def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
     '''
     LNKS parameter bounds for optimization
 
@@ -121,17 +159,19 @@ def LNKS_bnds(theta=None, bnd_mode=0):
     '''
 
     if bnd_mode == 0:
-        bnds = None
+        bnd_S = _sb.SC1DF_bnds()
+        bnd_LNK = LNK_bnds()
+        bnds = bnd_LNK + bnd_S
 
     elif bnd_mode == 1:
         bnd_LNK = tuple([(None, None) for i in range(17)])
         bnd_S = tuple([(theta[i],theta[i]) for i in range(17,theta.size)])
-        bnd = bnd_LNK + bnd_S
+        bnds = bnd_LNK + bnd_S
 
     elif bnd_mode == 2:
         bnd_LNK = tuple([(theta[i],theta[i]) for i in range(17)])
         bnd_S = ((None,None),(0,None),(None,None),(0,None),(None,None),(None,None),(None,None),(None,None),(None,None),(None,None))
-        bnd = bnd_LNK + bnd_S
+        bnds = bnd_LNK + bnd_S
 
 
     return bnds
@@ -237,28 +277,18 @@ def LNK_fobj_helper(LNK_f, theta, stim, y):
 
     v = LNK_f(theta, stim)
 
-    len_section = 10000
-    num_sections = _np.int(_np.floor(stim.size / len_section))
-    J_sections = _np.zeros(num_sections)
-
-    for i in range(num_sections):
-        if i == 0:
-            range_section = _np.arange(1000,len_section*(i+1))
-        else:
-            range_section = _np.arange(len_section*i,len_section*(i+1))
-        diff = y[range_section] - v[range_section]
-        y_std = _np.std(y[range_section])
-        if y_std == 0:
-            y_std = 1e-6
-        J_sections[i] = _np.sum((diff**2) / (y_std**2))
-
-    J = _np.sum(J_sections)
+    J = _ot.mse_weighted_loss(y, v, len_section=10000, weight_type="std")
 
     return J
 
-def LNK_bnds():
+def LNK_bnds(pathway=1):
 
-    bnds = None
+    if pathway == 1:
+        bnds = None
+    elif pathway == 2:
+        bnds = None
+    else:
+        bnds = None
 
     return bnds
 

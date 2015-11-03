@@ -230,7 +230,11 @@ class Cell:
             'theta':
             'model':
         '''
+
         if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
+            '''
+            Fitting Spiking Blocks
+            '''
 
             mp = self.mp - _np.min(self.mp)
             mp = mp / _np.max(mp)
@@ -241,6 +245,9 @@ class Cell:
             self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
 
         elif model.lower() == "lnks":
+            '''
+            Fitting LNKS model using only firing rate as an output
+            '''
             st = self.stim - _np.min(self.stim)
             st = st / _np.max(st)
             st = st - _np.mean(st)
@@ -248,7 +255,25 @@ class Cell:
 
             data = (st, fr)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, False, num_trials)
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
+
+
+        elif model.lower() == "lnks_mp":
+            '''
+            Fitting LNKS model using both membrane potential and firing rate as outputs
+            '''
+            st = self.stim - _np.min(self.stim)
+            st = st / _np.max(st)
+            st = st - _np.mean(st)
+            mp = self.mp - _np.min(self.mp)
+            mp = mp / _np.max(mp)
+            fr = self.fr / _np.max(self.fr)
+
+            outputs = [mp, fr]
+
+            data = (st, outputs)
+
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
 
         elif model.lower() == "lnk":
             st = self.stim - _np.min(self.stim)
@@ -259,7 +284,7 @@ class Cell:
 
             data = (st, mp)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, False, num_trials)
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
 
         elif model.lower() == "lnk_est":
             mp = self.v_est

@@ -38,7 +38,7 @@ setting custom path
 '''
 hostname = socket.gethostname()
 if 'corn' in hostname.lower():
-    path = '~/lnks/data/'
+    path = '/farmshare/user_data/bssuh/LNKS/data/'
 elif 'bongsoo' in hostname.lower():
     path = '/Users/suh/Projects/expts/expt00/'
 elif 'sni-vcs-baccus' in hostname.lower():
