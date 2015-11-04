@@ -89,6 +89,20 @@ def LNKS_fobj(theta, stim, y, pathway=1):
     return J
 
 
+def LNKS_fobj_helper(LNKS_f, theta, stim, y):
+    '''
+    LNKS model objective function helper function
+
+    Weighted sum of log-likelihood and mean-square error
+    '''
+
+    J1 = _ot.log_fobj(LNKS_f, theta, stim, y)
+    J2 = _ot.diff_fobj(LNKS_f, theta, stim, y)
+    J = J1 + J2
+
+    return J
+
+
 def LNKS_MP_f(theta, stim, pathway=1):
     '''
     compute LNKS model for optimization using both membrane potential and firing rate
@@ -107,38 +121,33 @@ def LNKS_MP_fobj(theta, stim, y_data, pathway=1):
         theta: model parameters
         stim: input data
         y_data: output data tuple (mp, fr)
+        pathway (int): LNK pathway (1 or 2)
 
     Outputs
     -------
         J: objective value
-        grad: objective gradient
-
+        grad: gradient of objective
     '''
 
-    #J, grad = _ot.fobjective_numel(LNK_fobj_helper, LNK_f, theta, (stim, y))
+    # data
     y_mp = y_data[0]
     y_fr = y_data[1]
 
-    y_mp_est, y_fr_est = LNKS_MP_f(theta, stim, pathway=1):
-    #return J, grad
-    J = LNKS_fobj_helper(LNKS_f, theta, stim, y)
+    # model output
+    y_mp_est, y_fr_est = LNKS_MP_f(theta, stim, pathway)
+    #y_mp_est, y_fr_est = f(theta, stim, pathway)
 
-    return J
+    J_mp = _ot.mse_weighted_loss(y_mp, y_mp_est, len_section=10000, weight_type="std")
+    J_fr_poss = _ot.poisson_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
+    J_fr_mse = _ot.mse_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
+    J_fr = J_fr_poss + J_fr_mse
 
+    J = J_mp + J_fr
 
+    grad = 0
 
-def LNKS_fobj_helper(LNKS_f, theta, stim, y):
-    '''
-    LNKS model objective function helper function
+    return J, grad
 
-    Weighted sum of log-likelihood and mean-square error
-    '''
-
-    J1 = _ot.log_fobj(LNKS_f, theta, stim, y)
-    J2 = _ot.diff_fobj(LNKS_f, theta, stim, y)
-    J = J1 + J2
-
-    return J
 
 def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
     '''

@@ -263,6 +263,7 @@ def SC1DF(theta, x_in):
     '''
 
     dx_in = deriv(x_in, 0.001)
+    #dx_in = deriv_backward(x_in, 0.001)
 
     y = _st.SC1DF(theta, x_in, dx_in)
     h = _st.SC1DF_get_h(theta, x_in, dx_in)
@@ -276,7 +277,7 @@ def SC1DF(theta, x_in):
     fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1])
     fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3])
     fb3 = theta_fb[4] * _np.exp( -t / theta_fb[5])
-    fb = (fb1 + fb2)/2
+    fb = (fb1 + fb2 + fb3)/2
 
     return y, h, gain, fb, b
 
@@ -301,6 +302,7 @@ def SC1DF_C(theta, x_in):
     '''
 
     dx_in = deriv(x_in, 0.001)
+    #dx_in = deriv_backward(x_in, 0.001)
 
     y = _st.SC1DF(theta, x_in, dx_in)
 
