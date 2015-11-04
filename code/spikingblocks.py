@@ -440,6 +440,67 @@ def SC1DF_constFB(theta, x_in):
 
     return y, gain
 
+
+def SC1DF_Impulse(theta, x_in, delta=1, index=0, input_mode='data'):
+    '''
+    Impulse response of Spiking Continuous 1-D model.
+    Compute from the analysis of instantaneous gain, the slope at delta is zero.
+
+    Input
+    -----
+    x_in (ndarray):
+        The input to the spiking block or subthreshold membrane potential.
+
+    theta (ndarray):
+        The SC parameters.
+
+    delta (double):
+        The impulse amplitude.
+
+    index (int):
+        The index where the impulse occurs.
+
+    input_mode (string):
+        The mode of finding the Impulse response, using different type of input.
+        input_mode is selected from {"data", "impulse", "step"}.
+            "data": x_in is a membrane potential(data or LNK output)
+            "impulse": x_in is a zeros array
+            "step": x_in is a zeros input
+
+    Output
+    ------
+    r_impulse (ndarray):
+        The impulse response
+    '''
+    infinite = 10000
+    dx_in = deriv(x_in, 0.001)
+    x_impulse = _np.zeros(len(x_in))
+
+    if input_mode == 'data':
+        x_impulse[index] = delta
+        x_in_p =  x_in + x_impulse
+
+        y = _st.SC1DF(theta, x_in, dx_in)
+        y_p = _st.SC1DF(theta, x_in_p, dx_in)
+
+        r_impulse = y_p - y
+
+    elif input_mode == 'impulse':
+        x_impulse[index] = delta
+
+        r_impulse = _st.SC1DF(theta, x_impulse, dx_in)
+
+    elif input_mode == 'step':
+        x_impulse[index:] = delta
+        dx_impulse = _np.zeros(len(x_in))
+        dx_impulse[index] = infinite
+        dx_in_p = dx_in + dx_impulse
+
+        r_impulse = _st.SC1DF(theta, x_impulse, dx_in_p)
+
+
+    return r_impulse
+
 '''
     Spiking Continuous(SC) models
 '''
