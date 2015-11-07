@@ -892,13 +892,14 @@ double *getfeedbackfilter(double *theta) {
     ptr3[0] = theta[7];
     ptr3[1] = theta[8];
     double *fb, *fb1, *fb2, *fb3;
+    int i;
 
     fb = createVector(lenP);
     fb1 = expfeedbackfilter(ptr1, lenP); 
     fb2 = expfeedbackfilter(ptr2, lenP); 
     fb3 = expfeedbackfilter(ptr3, lenP); 
 
-    for (int i=0; i<lenP; i++) {
+    for (i=0; i<lenP; i++) {
         fb[i] = (fb1[i] + fb2[i] + fb3[i])/3;
     }
 
@@ -909,9 +910,10 @@ double *getfeedbackfilter(double *theta) {
 double *get_initial_h(double *v, int N) {
 
     double *h;
+    int i;
     h = createVector(N);
 
-    for (int i=0; i<N; i++) {
+    for (i=0; i<N; i++) {
         h[i] = v[i];
     }
 
