@@ -732,6 +732,9 @@ void SC1DF(double *p, double *v, double *dv, double *r, int N) {
 }
 
 void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N) {
+/* 
+ * Returns the instantaneous spiking block gain given the input membrane potential.
+ */
 
     double *h, *fb, *rfb;
     int i, k, l;
@@ -770,7 +773,11 @@ void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N
 
 }
 
+
 void SC1DF_get_h(double *p, double *v, double *dv, double *r, double *h, int N) {
+/* 
+ * Returns the internal state(h) of the spiking block gain given the input membrane potential.
+ */
 
     double *fb, *rfb;
     int i, k, l;
@@ -807,6 +814,9 @@ void SC1DF_get_h(double *p, double *v, double *dv, double *r, double *h, int N) 
 
 
 void SC1DF_get_m(double *p, double *v, double *dv, double *r, double *m, int N) {
+/* 
+ * Returns the internal state(m) of the spiking block gain given the input membrane potential.
+ */
 
     double *h, *fb, *rfb;
     int i, k, l;
@@ -844,6 +854,9 @@ void SC1DF_get_m(double *p, double *v, double *dv, double *r, double *m, int N) 
 
 
 double sigmoid(double x){
+/* 
+ * Sigmoidal function
+ */
 
     double y;
 
@@ -853,6 +866,9 @@ double sigmoid(double x){
 }
 
 double *createVector(int n) {
+/* 
+ * create a n dimensional vector
+ */
 
     double *array;
     int i;
@@ -866,6 +882,9 @@ double *createVector(int n) {
 }
 
 double *expfeedbackfilter(double *theta, int N) {
+/* 
+ * create a exponential filter of length N given the parameter
+ */
 
     double *fb;
     int i;
@@ -881,6 +900,9 @@ double *expfeedbackfilter(double *theta, int N) {
 }
 
 double *getfeedbackfilter(double *theta) {
+/* 
+ * create a feedback filter of length N given the parameter
+ */
 
     double ptr1[2] = {0.0, 0.0};
     double ptr2[2] = {0.0, 0.0};
@@ -908,6 +930,9 @@ double *getfeedbackfilter(double *theta) {
 }
 
 double *get_initial_h(double *v, int N) {
+/* 
+ * get initial h
+ */
 
     double *h;
     int i;
