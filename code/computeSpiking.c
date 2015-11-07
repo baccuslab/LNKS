@@ -48,6 +48,11 @@ void SDF(double *p, double *v, double *r, int N);
 double sigmoid(double x);
 double *createVector(int n); 
 double *expfeedbackfilter(double *theta, int N); 
+double *getfeedbackfilter(double *theta);
+double *get_initial_h(double *v, int N); 
+
+
+
 
 void SCIF(double *p, double *v, double *dv, double *r, int N) {
 /* Spiking block returns the firing rate output given the input membrane potential.
@@ -692,31 +697,12 @@ void SC1DF(double *p, double *v, double *dv, double *r, int N) {
  *      The spiking block output, firing rate.
  */
 
-    double ptr1[2] = {0.0, 0.0};
-    double ptr2[2] = {0.0, 0.0};
-    double ptr3[2] = {0.0, 0.0};
-    ptr1[0] = p[3];
-    ptr1[1] = p[4];
-    ptr2[0] = p[5];
-    ptr2[1] = p[6];
-    ptr3[0] = p[7];
-    ptr3[1] = p[8];
-    double *h, *fb, *fb1, *fb2, *fb3, *rfb;
+    double *h, *fb, *rfb;
     int i, k, l;
 
-    h = createVector(N);
-    fb = createVector(lenP);
-    fb1 = expfeedbackfilter(ptr1, lenP); 
-    fb2 = expfeedbackfilter(ptr2, lenP); 
-    fb3 = expfeedbackfilter(ptr3, lenP); 
-    for (i=0; i<lenP; i++) {
-        fb[i] = fb1[i] + fb2[i] + fb3[i];
-    }
+    fb = getfeedbackfilter(p);
     rfb = createVector(lenP);
-
-    for (i=0; i<N; i++) {
-        h[i] = v[i];
-    }
+    h = get_initial_h(v, N);
 
     for (i=0; i<N; i++) {
 
@@ -747,31 +733,12 @@ void SC1DF(double *p, double *v, double *dv, double *r, int N) {
 
 void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N) {
 
-    double ptr1[2] = {0.0, 0.0};
-    double ptr2[2] = {0.0, 0.0};
-    double ptr3[2] = {0.0, 0.0};
-    ptr1[0] = p[3];
-    ptr1[1] = p[4];
-    ptr2[0] = p[5];
-    ptr2[1] = p[6];
-    ptr3[0] = p[7];
-    ptr3[1] = p[8];
-    double *h, *fb, *fb1, *fb2, *fb3, *rfb;
+    double *h, *fb, *rfb;
     int i, k, l;
 
-    h = createVector(N);
-    fb = createVector(lenP);
-    fb1 = expfeedbackfilter(ptr1, lenP); 
-    fb2 = expfeedbackfilter(ptr2, lenP); 
-    fb3 = expfeedbackfilter(ptr3, lenP); 
-    for (i=0; i<lenP; i++) {
-        fb[i] = fb1[i] + fb2[i] + fb3[i];
-    }
+    fb = getfeedbackfilter(p);
     rfb = createVector(lenP);
-
-    for (i=0; i<N; i++) {
-        h[i] = v[i];
-    }
+    h = get_initial_h(v, N);
 
     for (i=0; i<N; i++) {
 
@@ -805,30 +772,12 @@ void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N
 
 void SC1DF_get_h(double *p, double *v, double *dv, double *r, double *h, int N) {
 
-    double ptr1[2] = {0.0, 0.0};
-    double ptr2[2] = {0.0, 0.0};
-    double ptr3[2] = {0.0, 0.0};
-    ptr1[0] = p[3];
-    ptr1[1] = p[4];
-    ptr2[0] = p[5];
-    ptr2[1] = p[6];
-    ptr3[0] = p[7];
-    ptr3[1] = p[8];
-    double *fb, *fb1, *fb2, *fb3, *rfb;
+    double *fb, *rfb;
     int i, k, l;
 
-    fb = createVector(lenP);
-    fb1 = expfeedbackfilter(ptr1, lenP); 
-    fb2 = expfeedbackfilter(ptr2, lenP); 
-    fb3 = expfeedbackfilter(ptr3, lenP); 
-    for (i=0; i<lenP; i++) {
-        fb[i] = fb1[i] + fb2[i] + fb3[i];
-    }
+    fb = getfeedbackfilter(p);
     rfb = createVector(lenP);
-
-    for (i=0; i<N; i++) {
-        h[i] = v[i];
-    }
+    h = get_initial_h(v, N);
 
     for (i=0; i<N; i++) {
 
@@ -859,31 +808,12 @@ void SC1DF_get_h(double *p, double *v, double *dv, double *r, double *h, int N) 
 
 void SC1DF_get_m(double *p, double *v, double *dv, double *r, double *m, int N) {
 
-    double ptr1[2] = {0.0, 0.0};
-    double ptr2[2] = {0.0, 0.0};
-    double ptr3[2] = {0.0, 0.0};
-    ptr1[0] = p[3];
-    ptr1[1] = p[4];
-    ptr2[0] = p[5];
-    ptr2[1] = p[6];
-    ptr3[0] = p[7];
-    ptr3[1] = p[8];
-    double *h, *fb, *fb1, *fb2, *fb3, *rfb;
+    double *h, *fb, *rfb;
     int i, k, l;
 
-    h = createVector(N);
-    fb = createVector(lenP);
-    fb1 = expfeedbackfilter(ptr1, lenP); 
-    fb2 = expfeedbackfilter(ptr2, lenP); 
-    fb3 = expfeedbackfilter(ptr3, lenP); 
-    for (i=0; i<lenP; i++) {
-        fb[i] = fb1[i] + fb2[i] + fb3[i];
-    }
+    fb = getfeedbackfilter(p);
     rfb = createVector(lenP);
-
-    for (i=0; i<N; i++) {
-        h[i] = v[i];
-    }
+    h = get_initial_h(v, N);
 
     for (i=0; i<N; i++) {
 
@@ -948,4 +878,43 @@ double *expfeedbackfilter(double *theta, int N) {
     }
 
     return fb;
+}
+
+double *getfeedbackfilter(double *theta) {
+
+    double ptr1[2] = {0.0, 0.0};
+    double ptr2[2] = {0.0, 0.0};
+    double ptr3[2] = {0.0, 0.0};
+    ptr1[0] = theta[3];
+    ptr1[1] = theta[4];
+    ptr2[0] = theta[5];
+    ptr2[1] = theta[6];
+    ptr3[0] = theta[7];
+    ptr3[1] = theta[8];
+    double *fb, *fb1, *fb2, *fb3;
+
+    fb = createVector(lenP);
+    fb1 = expfeedbackfilter(ptr1, lenP); 
+    fb2 = expfeedbackfilter(ptr2, lenP); 
+    fb3 = expfeedbackfilter(ptr3, lenP); 
+
+    for (int i=0; i<lenP; i++) {
+        fb[i] = (fb1[i] + fb2[i] + fb3[i])/3;
+    }
+
+    return fb;
+
+}
+
+double *get_initial_h(double *v, int N) {
+
+    double *h;
+    h = createVector(N);
+
+    for (int i=0; i<N; i++) {
+        h[i] = v[i];
+    }
+
+    return h;
+
 }

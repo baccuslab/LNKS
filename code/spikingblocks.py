@@ -277,7 +277,7 @@ def SC1DF(theta, x_in):
     fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1])
     fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3])
     fb3 = theta_fb[4] * _np.exp( -t / theta_fb[5])
-    fb = (fb1 + fb2 + fb3)/2
+    fb = (fb1 + fb2 + fb3)/3
 
     return y, h, gain, fb, b
 
@@ -307,6 +307,7 @@ def SC1DF_C(theta, x_in):
     y = _st.SC1DF(theta, x_in, dx_in)
 
     return y
+
 
 '''
     Spiking Continuous 1-D Feedback(SC1DF) objective functions, gradient, gain
