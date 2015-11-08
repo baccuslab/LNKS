@@ -263,7 +263,7 @@ def poisson_loss(y, y_est):
 
 
 
-def fobj_numel_grad(fobj, f, theta, x_in, y):
+def fobj_numel_grad(fobj, f, theta, x_in, y, **kwargs):
     '''
     numerical gradient
     :param fobj:
@@ -273,7 +273,13 @@ def fobj_numel_grad(fobj, f, theta, x_in, y):
     :param y:
     :return:
     '''
-    J0 = fobj(f, theta, x_in, y) # evaluate function value at original point
+    if kwargs is not None:
+        pathway = kwargs["path"]
+        J0 = fobj(f, theta, x_in, y, pathway) # evaluate function value at original point
+    else:
+        pathway = None
+        J0 = fobj(f, theta, x_in, y) # evaluate function value at original point
+
     grad = _np.zeros(theta.shape)
     h = 0.00001
 
@@ -284,7 +290,13 @@ def fobj_numel_grad(fobj, f, theta, x_in, y):
         # evaluate function at theta+h
         i0 = it.multi_index
         theta[i0] += h # increment by h
-        Jh = fobj(f, theta, x_in, y) # evalute f(theta + h)
+
+        # evaluate f(theta+h)
+        if pathway:
+            Jh = fobj(f, theta, x_in, y, pathway)
+        else:
+            Jh = fobj(f, theta, x_in, y)
+
         theta[i0] -= h # restore to previous value (very important!)
 
         # compute the partial derivative

@@ -276,6 +276,9 @@ class Cell:
             self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
 
         elif model.lower() == "lnk":
+            '''
+            Fitting LNK model to the membrane potential
+            '''
             st = self.stim - _np.min(self.stim)
             st = st / _np.max(st)
             st = st - _np.mean(st)
@@ -287,6 +290,9 @@ class Cell:
             self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
 
         elif model.lower() == "lnk_est":
+            '''
+            Fitting Spiking model to the firing rate using the LNK model estimate.
+            '''
             mp = self.v_est
             fr = self.fr / _np.max(self.fr)
 
@@ -312,7 +318,7 @@ class Cell:
 
             self.est = f(theta, data[0])
 
-        elif model.lower() == "lnks":
+        elif model.lower() in ["lnks", "lnks_mp"]:
             st = self.stim - _np.min(self.stim)
             st = st / _np.max(st)
             st = st - _np.mean(st)

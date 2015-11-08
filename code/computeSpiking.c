@@ -922,7 +922,7 @@ double *getfeedbackfilter(double *theta) {
     fb3 = expfeedbackfilter(ptr3, lenP); 
 
     for (i=0; i<lenP; i++) {
-        fb[i] = (fb1[i] + fb2[i] + fb3[i])/3;
+        fb[i] = (fb1[i] + fb2[i])/2 + fb3[i];
     }
 
     return fb;
