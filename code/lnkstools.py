@@ -131,7 +131,7 @@ def LNKS_MP_fobj(theta, stim, y_data, pathway=1):
     '''
 
     J = LNKS_MP_fobj_helper(LNKS_MP_f, theta, stim, y_data, pathway)
-    grad = _ot.fobj_numel_grad(LNKS_MP_fobj_helper, LNKS_MP_f, theta, stim, y_data, path=pathway)
+    grad = _ot.fobj_numel_grad(LNKS_MP_fobj_helper, LNKS_MP_f, theta, stim, y_data, pathway)
 
     return J, grad
 
@@ -368,9 +368,9 @@ def Spiking(theta, x_in):
     ------
     '''
 
-    y, h, gain, fb, b = SC1DF(theta, x_in)
+    y, h, gain, fb, b = _sb.SC1DF(theta, x_in)
 
-    return y, h, gain
+    return y, h, gain, fb, b
 
 
 def sigmoid(x):
