@@ -58,13 +58,29 @@ def LNKS(theta, stim, pathway=1):
 
     '''
 
-    # compute LNK model
-    f, g, u, thetaK, X, v = LNK(theta[:17], stim, pathway=1)
+    if pathway == 1:
+        # compute LNK model
+        f, g, u, thetaK, X, v = LNK(theta[:17], stim, pathway)
 
-    # Comptue Spiking model
-    # Running fast c-extension
-    # To get the internal variables of the spiking block, use Spiking method.
-    r = _sb.SC1DF_C(theta[17:], v)
+        # Comptue Spiking model
+        # Running fast c-extension
+        # To get the internal variables of the spiking block, use Spiking method.
+        r = _sb.SC1DF_C(theta[17:], v)
+
+    elif pathway == 2:
+        # compute LNK model
+        # One path LNK parameter 17 plus 1 weight, thus 18
+        # Two path LNK parameter (17*2 + 2 = 36) where two weights are w_on and w_off
+        # theta[17] and theta[35] respectively.
+        f, g, u, thetaK, X, v = LNK(theta[:36], stim, pathway)
+
+        # Comptue Spiking model
+        # spiking parameters following after LNK parameters
+        r = _sb.SC1DF_C(theta[36:], v)
+
+    else:
+        raise ValueError('The pathway parameter should be 1 or 2')
+
 
     return f, g, u, thetaK, X, v, r
 
@@ -72,7 +88,7 @@ def LNKS_f(theta, stim, pathway=1):
     '''
     compute LNKS model for optimization using only firing rate as output
     '''
-    f, g, u, thetaK, X, v, r = LNKS(theta, stim, pathway=pathway)
+    f, g, u, thetaK, X, v, r = LNKS(theta, stim, pathway)
 
     return r
 
@@ -80,25 +96,40 @@ def LNKS_f(theta, stim, pathway=1):
 def LNKS_fobj(theta, stim, y, pathway=1):
     '''
     LNKS model objective function for using only firing rate as output
+    Returns objective value(J) and gradient(grad)
+
+    Inputs
+    ------
+        theta: model parameters
+        stim: input data
+        y: output data (fr)
+        pathway (int): LNK pathway (1 or 2)
+
+    Outputs
+    -------
+        J: objective value
+        grad: gradient of objective
     '''
-    #J, grad = _ot.fobjective_numel(LNK_fobj_helper, LNK_f, theta, (stim, y))
 
-    #return J, grad
-    J = LNKS_fobj_helper(LNKS_f, theta, stim, y)
+    J = LNKS_fobj_helper(LNKS_f, theta, stim, y, pathway)
+    grad = _ot.fobj_numel_grad(LNKS_fobj_helper, LNKS_f, theta, stim, y, pathway)
 
-    return J
+    return J, grad
 
 
-def LNKS_fobj_helper(LNKS_f, theta, stim, y):
+def LNKS_fobj_helper(f, theta, stim, y, pathway=1):
     '''
     LNKS model objective function helper function
 
     Weighted sum of log-likelihood and mean-square error
     '''
 
-    J1 = _ot.log_fobj(LNKS_f, theta, stim, y)
-    J2 = _ot.diff_fobj(LNKS_f, theta, stim, y)
-    J = J1 + J2
+    y_est = f(theta, stim, pathway)
+
+    # linear combination of objective functions
+    J_poss = _ot.poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    J_mse = _ot.mse_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    J = J_poss + J_mse
 
     return J
 
@@ -107,7 +138,7 @@ def LNKS_MP_f(theta, stim, pathway=1):
     '''
     compute LNKS model for optimization using both membrane potential and firing rate
     '''
-    f, g, u, thetaK, X, v, r = LNKS(theta, stim, pathway=pathway)
+    f, g, u, thetaK, X, v, r = LNKS(theta, stim, pathway)
 
     return v, r
 
@@ -192,19 +223,30 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
 
     if bnd_mode == 0:
         bnd_S = _sb.SC1DF_bnds()
-        bnd_LNK = LNK_bnds()
+        bnd_LNK = LNK_bnds(pathway)
         bnds = bnd_LNK + bnd_S
 
     elif bnd_mode == 1:
-        bnd_LNK = tuple([(None, None) for i in range(17)])
-        bnd_S = tuple([(theta[i],theta[i]) for i in range(17,theta.size)])
+        bnd_LNK = LNK_bnds(pathway)
+        if pathway == 1:
+            bnd_S = tuple([(theta[i],theta[i]) for i in range(17,theta.size)])
+        elif pathway == 2:
+            bnd_S = tuple([(theta[i],theta[i]) for i in range(36,theta.size)])
+        else:
+            raise ValueError('The pathway parameter should be 1 or 2')
+
         bnds = bnd_LNK + bnd_S
 
     elif bnd_mode == 2:
-        bnd_LNK = tuple([(theta[i],theta[i]) for i in range(17)])
-        bnd_S = ((None,None),(0,None),(None,None),(0,None),(None,None),(None,None),(None,None),(None,None),(None,None),(None,None))
-        bnds = bnd_LNK + bnd_S
+        if pathway == 1:
+            bnd_LNK = tuple([(theta[i],theta[i]) for i in range(17)])
+        elif pathway == 2:
+            bnd_LNK = tuple([(theta[i],theta[i]) for i in range(36)])
+        else:
+            raise ValueError('The pathway parameter should be 1 or 2')
 
+        bnd_S = _sb.SC1DF_bnds()
+        bnds = bnd_LNK + bnd_S
 
     return bnds
 
@@ -252,78 +294,197 @@ def LNK(theta, stim, pathway=1):
 
     # one pathway
     if pathway == 1:
-        # Compute the linear filter and find the filtered output
-        f = basis.dot(theta[:numBasis])
-        g = _np.convolve(nzstim, f)
-        g = g[:lenStim]
-
-        # Compute nonlinearity, implemented by sigmoidal function
-        u = sigmoid(theta[numBasis] + theta[numBasis+1] * g)
-
-        # Compute Kinetics block operation.
-        thetaK = _np.array(theta[numBasis+2:])
-        X0 = _np.array([0.1,0.2,0.7,99]) # Initial Kinetics states
-        X = Kinetics(thetaK, X0, u)
-        v = X[1,:]
-
-        v = v - _np.min(v)
-        v = v / _np.max(v)
-
+        f, g, u, thetaK, X, v = LNK_single_path(theta, nzstim, lenStim, basis, numBasis)
 
     # two pathway
     elif pathway == 2:
-        print("two pathway")
+        # first half: on pathway
+        # second half: off pathway
+        theta_on = theta[:17]
+        theta_off = theta[18:35]
+
+        # weights
+        w_on = theta[17]
+        w_off = theta[35]
+
+        # compute single pathway LNK for each pathway
+        f1, g1, u1, thetaK1, X1, v_on = LNK_single_path(theta_on, nzstim, lenStim, basis, numBasis)
+        f2, g2, u2, thetaK2, X2, v_off = LNK_single_path(theta_off, nzstim, lenStim, basis, numBasis)
+
+        # combine two path outputs
+        f = [f1,f2]
+        g = [g1,g2]
+        u = [u1,u2]
+        thetaK = [thetaK1,thetaK2]
+        X = [X1,X2]
+
+        # linear combination of on and off path outputs
+        v = w_on * v_on + w_off * v_off
+
     else:
-        print("not available")
+        raise ValueError('The pathway parameter should be 1 or 2')
 
 
     return f, g, u, thetaK, X, v
+
+
+def LNK_single_path(theta, nzstim, lenStim, basis, numBasis):
+    '''
+    This method is a helper function for the LNK method, by computing a single path of a LNK model.
+    LNK model could be a 1 path or a 2 path way model, where the single path method is same as the LNK model
+    for case when path is 1, and single path is computed for twice for 2 path model and their outputs are summed.
+
+    Input
+    -----
+    theta (ndarray):
+        The parameters for single path.
+
+    nzstim (ndarray):
+        The mean subtracted stimulus array.
+
+    lenStim (int):
+        The length of the stimulus
+
+    basis (ndarray):
+        Linear filter basis
+
+    numBasis (int):
+        The number of basis
+
+    Output
+    ------
+    f (ndarray):
+        The linear filter of the LNK model.
+
+    g (ndarray):
+        The output of the linear filter of the LNK model.
+
+    u (ndarray):
+        The output of the nonlinearity of the LNK model.
+
+    K (ndarray):
+        The kinetics parameters of the LNK model.
+
+    X (ndarray):
+        The responses of four states(R, A, I1, I2).
+
+    v (ndarray):
+        The LNK model output.
+    '''
+    # Compute the linear filter and find the filtered output
+    f = basis.dot(theta[:numBasis])
+    g = _np.convolve(nzstim, f)
+    g = g[:lenStim]
+
+    # Compute nonlinearity, implemented by sigmoidal function
+    u = sigmoid(theta[numBasis] + theta[numBasis+1] * g)
+
+    # Compute Kinetics block operation.
+    thetaK = _np.array(theta[numBasis+2:])
+    X0 = _np.array([0.1,0.2,0.7,99]) # Initial Kinetics states
+    X = Kinetics(thetaK, X0, u)
+    v = X[1,:]
+
+    v = v - _np.min(v)
+    v = v / _np.max(v)
+
+    return f, g, u, thetaK, X, v
+
 
 def LNK_f(theta, stim, pathway=1):
     '''
     compute LNK model for optimization
     '''
-    f, g, u, thetaK, X, v = LNK(theta, stim, pathway=pathway)
+    f, g, u, thetaK, X, v = LNK(theta, stim, pathway)
 
     return v
 
 
-def LNK_fobj(theta, stim, y):
+def LNK_fobj(theta, stim, y, pathway=1):
     '''
     LNK model objective function
+    Returns objective value(J) and gradient(grad)
+
+    Inputs
+    ------
+        theta: model parameters
+        stim: input data
+        y: output data (mp)
+        pathway (int): LNK pathway (1 or 2)
+
+    Outputs
+    -------
+        J: objective value
+        grad: gradient of objective
     '''
-    #J, grad = _ot.fobjective_numel(LNK_fobj_helper, LNK_f, theta, (stim, y))
 
-    #return J, grad
-    J = LNK_fobj_helper(LNK_f, theta, stim, y)
+    J = LNK_fobj_helper(LNK_f, theta, stim, y, pathway)
+    grad = _ot.fobj_numel_grad(LNK_fobj_helper, LNK_f, theta, stim, y, pathway)
 
-    return J
+    return J, grad
 
 
-def LNK_fobj_helper(LNK_f, theta, stim, y):
+def LNK_fobj_helper(LNK_f, theta, stim, y, pathway=1):
     '''
     LNK model objective function helper function
 
     Weighted sum of mean-square error
     '''
 
-    v = LNK_f(theta, stim)
+    v = LNK_f(theta, stim, pathway)
 
     J = _ot.mse_weighted_loss(y, v, len_section=10000, weight_type="std")
 
     return J
 
+
 def LNK_bnds(pathway=1):
+    '''
+    Return boundaries for LNK model optimization
+    '''
 
     if pathway == 1:
-        bnds = None
+        bnds = L_bnds + N_bnds + K_bnds
+
     elif pathway == 2:
-        bnds = None
+        bnds = (L_bnds + N_bnds + K_bnds + W_bnds) * 2
+
     else:
-        bnds = None
+        raise ValueError('The pathway parameter should be 1 or 2')
 
     return bnds
 
+def L_bnds(numBasis=8):
+    '''
+    Return boundaries for L model
+    '''
+    bnds = tuple([(None,None) for i in range(numBasis)])
+
+    return bnds
+
+def N_bnds():
+    '''
+    Return boundaries for N model
+    '''
+    bnds = tuple([(None,None),(0,None)])
+
+    return bnds
+
+def K_bnds():
+    '''
+    Return boundaries for K model
+    '''
+    bnds = tuple([(0,None) for i in range(7)])
+
+    return bnds
+
+def W_bnds():
+    '''
+    Return boundaries for W weights for two pathway LNK model
+    '''
+    bnds = tuple([(0,1),(0,1)])
+
+    return bnds
 
 
 def Kinetics(p, Xinit, xinput):
@@ -349,10 +510,10 @@ def Kinetics(p, Xinit, xinput):
     '''
 
     # Compute Kinetics block
-    #X = _kb.K4S(p, Xinit, xinput)
+    # X = _kb.K4S(p, Xinit, xinput)
 
     # Fast Kinetics block computation
-    X =  _kb.K4S_C(p, Xinit, xinput)
+    X = _kb.K4S_C(p, Xinit, xinput)
 
     return X
 

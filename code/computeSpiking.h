@@ -44,6 +44,7 @@ void SDF(double *p, double *v, double *r, int N);
  */
 double sigmoid(double x);
 double *createVector(int n); 
-double *feedbackfilter(double *theta, int N); 
-
+double *expfeedbackfilter(double *theta, int N); 
+double *getfeedbackfilter(double *theta);
+double *get_initial_h(double *v, int N); 
 

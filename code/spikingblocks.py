@@ -367,8 +367,11 @@ def SC1DF_bnds():
     '''
     return SCIF bound constraints.
     '''
-    #bnds = ((None,None),(None,None),(None,None),(0,None),(0,None),(0,None),(0,None))
-    bnds = ((None,None),(None,None),(None,None),(0,None),(0,None),(0,None),(0,None),(0,None),(0,None))
+    numFB = 3
+    thr_bnds = ((None,None),(None,None),(None,None))
+    fb_bnds = tuple([(0,None) for i in range(numFB*2)])
+
+    bnds = thr_bnds + fb_bnds
 
     return bnds
 
