@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define lenP 10000
+#define lenP 5000
 
 /*
  * SC1DF
