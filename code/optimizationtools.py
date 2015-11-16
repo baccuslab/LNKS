@@ -500,7 +500,7 @@ def logistic_fobj(theta, X, y):
 
 
 
-def optimize(fobj, f, theta, data, bnds=None, grad=False, num_trials=1):
+def optimize(fobj, f, theta, data, bnds=None, grad=False, num_trials=1, pathway=None):
     '''
     Optimization using scipy.optimize.minimize module
 

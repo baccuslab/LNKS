@@ -125,9 +125,7 @@ class Cell:
         '''
 
         st = self.stim
-        st = st - _np.min(st)
-        st = st / _np.max(st)
-        st = st - _np.mean(st)
+        st = normalize_stim(st)
 
         mp = self.mp
         mp = mp - _np.min(mp[20000:])
@@ -160,9 +158,7 @@ class Cell:
         '''
 
         st = self.stim
-        st = st - _np.min(st)
-        st = st / _np.max(st)
-        st = st - _np.mean(st)
+        st = normalize_stim(st)
 
         mp = self.mp
         mp = mp - _np.min(mp[20000:])
@@ -218,7 +214,7 @@ class Cell:
         ### need to be implemented
 
 
-    def fit(self, fobj, f, theta, model, bnds=None, num_trials=1):
+    def fit(self, fobj, f, theta, model, bnds=None, num_trials=1, pathway=None):
         '''
         Fit model to the cell data
 
@@ -231,6 +227,17 @@ class Cell:
             'model':
         '''
 
+        # Boundary conditions
+        if bnds != None and pathway != None:
+            # bnds as a function with input argument pathway
+            bounds = bnds(pathway=pathway)
+        elif bnds != None and pathway == None:
+            # bnds as a function without input argument pathway
+            bounds = bnds()
+        else:
+            # bnds as a tuple of boundaries or None
+            bounds = bnds
+
         if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
             '''
             Fitting Spiking Blocks
@@ -242,52 +249,46 @@ class Cell:
 
             data = (mp, fr)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
+            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
 
         elif model.lower() == "lnks":
             '''
             Fitting LNKS model using only firing rate as an output
             '''
-            st = self.stim - _np.min(self.stim)
-            st = st / _np.max(st)
-            st = st - _np.mean(st)
+            st = normalize_stim(self.stim)
             fr = self.fr / _np.max(self.fr)
 
-            data = (st, fr)
+            data = (st, fr, pathway)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
+            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
 
 
         elif model.lower() == "lnks_mp":
             '''
             Fitting LNKS model using both membrane potential and firing rate as outputs
             '''
-            st = self.stim - _np.min(self.stim)
-            st = st / _np.max(st)
-            st = st - _np.mean(st)
+            st = normalize_stim(self.stim)
             mp = self.mp - _np.min(self.mp)
             mp = mp / _np.max(mp)
             fr = self.fr / _np.max(self.fr)
 
             outputs = [mp, fr]
 
-            data = (st, outputs)
+            data = (st, outputs, pathway)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
+            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
 
         elif model.lower() == "lnk":
             '''
             Fitting LNK model to the membrane potential
             '''
-            st = self.stim - _np.min(self.stim)
-            st = st / _np.max(st)
-            st = st - _np.mean(st)
+            st = normalize_stim(self.stim)
             mp = self.mp - _np.min(self.mp)
             mp = mp / _np.max(mp)
 
-            data = (st, mp)
+            data = (st, mp, pathway)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
+            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
 
         elif model.lower() == "lnk_est":
             '''
@@ -298,17 +299,20 @@ class Cell:
 
             data = (mp, fr)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials)
+            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
 
         else:
             print("model name error")
 
 
-    def predict(self, f, theta, model):
+    def predict(self, f, theta, model, pathway=None):
         '''
         Predict model estimate
         '''
         if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
+            '''
+            Predicting Spiking Model from the membrane potential data
+            '''
 
             mp = self.mp - _np.min(self.mp)
             mp = mp / _np.max(mp)
@@ -318,28 +322,41 @@ class Cell:
 
             self.est = f(theta, data[0])
 
+        elif model.lower() == "lnk_est":
+            '''
+            Predicting Spiking model from the LNK model estimate.
+            '''
+            mp = self.v_est
+            fr = self.fr / _np.max(self.fr)
+
+            data = (mp, fr)
+
+            self.est = f(theta, data[0])
+
         elif model.lower() in ["lnks", "lnks_mp"]:
-            st = self.stim - _np.min(self.stim)
-            st = st / _np.max(st)
-            st = st - _np.mean(st)
+            '''
+            Predicting LNKS model
+            '''
+            st = normalize_stim(self.stim)
             fr = self.fr / _np.max(self.fr)
 
             data = (st, fr)
 
-            l, g, u, thetaK, X, v, r = _lnks.LNKS(theta, data[0])
+            l, g, u, thetaK, X, v, r = _lnks.LNKS(theta, data[0], pathway)
             self.r_est = r
             self.v_est = v
 
         elif model.lower() == "lnk":
-            st = self.stim - _np.min(self.stim)
-            st = st / _np.max(st)
-            st = st - _np.mean(st)
+            '''
+            Predicting LNK model
+            '''
+            st = normalize_stim(self.stim)
             mp = self.mp - _np.min(self.mp)
             mp = mp / _np.max(mp)
 
             data = (st, mp)
 
-            l, g, u, thetaK, X, v = f(theta, data[0])
+            l, g, u, thetaK, X, v = f(theta, data[0], pathway)
             self.v_est = v
             self.X_est = X
             self.u_est = u
@@ -629,6 +646,33 @@ class Cell:
         templ = _dpt.lowpassfilter(_np.real(temph), filt_len, num_rep)
         self.mp = _np.real(templ)
 
+
+def normalize_stim(stim):
+    '''
+    Normalize stimulus to have zero mean and maximum difference between max and min to be 1.
+
+    Input
+    -----
+    stim (ndarray): visual stimulus
+
+    Output
+    ------
+    st (ndarray): normalized stimulus
+    '''
+
+    st = normalize_0_1(stim)
+    st = st - _np.mean(st)
+
+    return st
+
+def normalize_0_1(x):
+    '''
+    Return x_norm, a normalized x to be between 0~1.
+    '''
+    x_norm = x - _np.min(x)
+    x_norm = x_norm / _np.max(x_norm)
+
+    return x_norm
 
 def main():
     filename = 'g12.mat'

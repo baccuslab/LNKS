@@ -2,9 +2,10 @@
 '''
 fitmodel.py
 
-This is a script optimizing LNKS model.
+This is a script for LNKS model optimization.
 
 author: Bongsoo Suh
+
 created: 2015-03-23
 updated: 2015-10-05
 updated: 2015-11-12
@@ -21,6 +22,7 @@ import lnkstools as lnks
 import numpy as np
 import pickle
 from scipy.stats import pearsonr
+
 
 models = {
         "LNKS" : lnks.LNKS_f,
@@ -53,44 +55,60 @@ def main():
     cross-validation fitting
     '''
 
-    cell_num, model, model_S, objective, init_num_LNK, init_num_S, optim_iter, crossval = get_env()
+    cell_num, model, model_S, pathway, objective, init_num_LNK, init_num_S, optim_iter, crossval = get_env()
 
     if (crossval == "True") and (not cell_num == "allcells"):
-        crossval_fitting(cell_num, model, objective)
+        crossval_fitting(cell_num, model, model_S, objective)
 
     else:
         if cell_num == "allcells":
-            allcells_fitting(cell_num, model, objective)
+            allcells_fitting(cell_num, model, model_S, objective)
         else:
             if np.int(optim_iter) == 0:
-                regular_fitting(cell_num, model, model_S, objective, init_num_LNK, init_num_S)
+                regular_fitting(cell_num, model, model_S, np.int(pathway), objective, init_num_LNK, init_num_S)
             else:
                 regular_fitting_iter(cell_num, model, model_S, objective, init_num_LNK, init_num_S, optim_iter)
 
 
-def regular_fitting(cell_num, model, model_S, objective, init_num_LNK, init_num_S):
+def regular_fitting(cell_num, model, model_S, pathway, objective, init_num_LNK, init_num_S):
     '''
     fit one cell
+
+    Inputs
+    ------
+    cell_num (string) : cell number
+    model (string) : type of model optimized
+    pathway (int) : number of pathways for LNK or LNKS model (1 or 2)
+    objective (string): type of objective function optimized
+    init_num_LNK (string) : initial parameter of LNK model
+    init_num_S (string): initial parameter of S model
     '''
+
+    # load cell data
     cell = ldt.loadcell(cell_num)
+
+    # select type of model, objective, and boundary
     f = models[model]
-    fS = models_S[model_S]
     fobj = objectives[objective]
     bnds = bounds[model]
 
-
-    # get initials
-    theta_init = np.zeros(17 + 10)
-
+    # load initials files
+    # LNK initials
     filename = init_num_LNK + '.initial'
     theta_LNK = get_initial(filename)
+    theta_init_LNK = theta_LNK['theta']
+
+    # S initials
     filename = init_num_S + '.initial'
-    theta_S = get_initial(filename)
+    theta_init_S = get_initial(filename)
 
-    theta_init[:17] = theta_LNK['theta']
-    theta_init[17:] = theta_S
+    # combine LNK and S initials
+    theta_init = np.concatenate((theta_init_LNK,theta_init_S),axis=0)
 
-    cell = optimize(cell, cell_num, fobj, f, theta_init, model, bnds)
+    # Optimization
+    cell = optimize(cell, cell_num, fobj, f, theta_init, model, bnds, pathway=pathway)
+
+    # Results
     theta = cell.result['theta']
     cell.predict(f, theta, model)
     mp_range = np.arange(1000, 300000)
@@ -107,7 +125,6 @@ def regular_fitting_iter(cell_num, model, model_S, objective, init_num_LNK, init
     '''
     cell = ldt.loadcell(cell_num)
     f = models[model]
-    fS = models_S[model_S]
     fobj = objectives[objective]
     bnds = bounds[model]
 
@@ -164,7 +181,7 @@ def regular_fitting_iter(cell_num, model, model_S, objective, init_num_LNK, init
     print("optimization finished")
 
 
-def crossval_fitting(cell_num, model, objective):
+def crossval_fitting(cell_num, model, model_S, objective):
     '''
     fit each cell using the training data of [1s, 10s, 20s, 50s, 100s, 150s, 200s, 240s]
     and test on the test data.
@@ -238,7 +255,7 @@ def crossval_fitting(cell_num, model, objective):
     print("optimization finished")
 
 
-def allcells_fitting(cell_num, model, objective):
+def allcells_fitting(cell_num, model, model_S, objective):
     '''
     fit all cells together to get the average spiking block(the common spiking block) that captures
     all the spikings in all the cells as much as possible
@@ -304,7 +321,7 @@ def get_env():
     '''
     Assigning input environmental variables to parameters
     '''
-    return sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8]
+    return sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]
 
 def get_initial(filename):
     '''
@@ -319,7 +336,7 @@ def get_initial(filename):
 
 
 
-def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, bnd_mode=0):
+def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, bnd_mode=0, pathway=1):
     '''
     * Optimization *
         Using the objective function fobj, model function f, and initial parameter theta_init,
@@ -344,11 +361,12 @@ def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, bnd_mode=0):
 
     print("this is in optimize function")
 
-    bound = bnds(bnd_mode)
+    bound = bnds(pathway=pathway, bnd_mode=bnd_mode)
 
     cell.fit(fobj, f, theta_init, model, bound)
 
     return cell
+
 
 def printresults(cell):
     fun = np.max(cell.result['fun'])
