@@ -43,7 +43,7 @@ def main():
     cross-validation fitting
     '''
 
-    cell_num, model, objective, crossval, init_num_LNK = get_env()
+    cell_num, model, pathway, objective, crossval, init_num_LNK = get_env()
 
     if (crossval == "True") and (not cell_num == "allcells"):
         crossval_fitting(cell_num, model, objective)
@@ -52,30 +52,43 @@ def main():
         if cell_num == "allcells":
             allcells_fitting(cell_num, model, objective)
         else:
-            regular_fitting(cell_num, model, objective, init_num_LNK)
+            regular_fitting(cell_num, model, pathway, objective, init_num_LNK)
 
 
-def regular_fitting(cell_num, model, objective, init_num_LNK):
+def regular_fitting(cell_num, model, pathway, objective, init_num_LNK):
     '''
     fit one cell
+
+    Inputs
+    ------
+    cell_num (string) : cell number
+    model (string) : type of model optimized
+    pathway (int) : number of pathways for LNK or LNKS model (1 or 2)
+    objective (string): type of objective function optimized
+    init_num_LNK (string) : initial parameter of LNK model
     '''
+    # load cell data
     cell = ldt.loadcell(cell_num)
+
+    # select type of model, objective, boundary function
     f = models[model]
     fobj = objectives[objective]
     bnds = bounds[model]
 
 
     # get initials
-    #filename = cell_num + '.initial'
+    # filename = cell_num + '.initial'
     # initial parameter filename
     if cell_num in ['g4','g6','g8','g9','g13','g15','g17','g12','g17','g19','g20']:
         filename = 'g9apb.initial'
     else:
         filename = cell_num + '.initial'
-    filename = init_num_LNK + '.initial'
 
+    # load LNK initial data
+    filename = init_num_LNK + '.initial'
     theta_init = get_initial(filename)
 
+    # Optimization
     cell = optimize(cell, cell_num, fobj, f, theta_init, model, bnds)
     cell.saveresult(cell_num+'_results.pickle')
     printresults(cell)
@@ -238,7 +251,7 @@ def get_initial(filename):
 
 
 
-def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, num_trials=1):
+def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, num_trials=1, pathway=None):
     '''
     * Optimization *
         Using the objective function fobj, model function f, and initial parameter theta_init,
@@ -254,7 +267,8 @@ def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, num_trials=1):
     '''
 
     print("this is in optimize function")
-    cell.fit(fobj, f, theta_init, model, bnds, num_trials=num_trials)
+    bound = bnds(pathway=pathway)
+    cell.fit(fobj, f, theta_init, model, bound, num_trials=num_trials, pathway=pathway)
 
     return cell
 

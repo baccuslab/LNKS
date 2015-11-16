@@ -78,6 +78,7 @@ def regular_fitting(cell_num, model, model_S, pathway, objective, init_num_LNK, 
     ------
     cell_num (string) : cell number
     model (string) : type of model optimized
+    model_S (string) : type of Spiking model optimized
     pathway (int) : number of pathways for LNK or LNKS model (1 or 2)
     objective (string): type of objective function optimized
     init_num_LNK (string) : initial parameter of LNK model
@@ -87,7 +88,7 @@ def regular_fitting(cell_num, model, model_S, pathway, objective, init_num_LNK, 
     # load cell data
     cell = ldt.loadcell(cell_num)
 
-    # select type of model, objective, and boundary
+    # select type of model, objective, and boundary function
     f = models[model]
     fobj = objectives[objective]
     bnds = bounds[model]
@@ -363,7 +364,7 @@ def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, bnd_mode=0, pathw
 
     bound = bnds(pathway=pathway, bnd_mode=bnd_mode)
 
-    cell.fit(fobj, f, theta_init, model, bound)
+    cell.fit(fobj, f, theta_init, model, bound, pathway=pathway)
 
     return cell
 
