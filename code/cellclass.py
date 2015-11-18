@@ -14,7 +14,7 @@ import dataprocesstools as _dpt
 import optimizationtools as _ot
 import lnkstools as _lnks
 import pickle
-
+import pdb
 
 class Cell:
     '''
@@ -227,17 +227,6 @@ class Cell:
             'model':
         '''
 
-        # Boundary conditions
-        if bnds != None and pathway != None:
-            # bnds as a function with input argument pathway
-            bounds = bnds(pathway=pathway)
-        elif bnds != None and pathway == None:
-            # bnds as a function without input argument pathway
-            bounds = bnds()
-        else:
-            # bnds as a tuple of boundaries or None
-            bounds = bnds
-
         if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
             '''
             Fitting Spiking Blocks
@@ -249,7 +238,7 @@ class Cell:
 
             data = (mp, fr)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
 
         elif model.lower() == "lnks":
             '''
@@ -260,7 +249,7 @@ class Cell:
 
             data = (st, fr, pathway)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
 
 
         elif model.lower() == "lnks_mp":
@@ -276,7 +265,7 @@ class Cell:
 
             data = (st, outputs, pathway)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
 
         elif model.lower() == "lnk":
             '''
@@ -288,7 +277,7 @@ class Cell:
 
             data = (st, mp, pathway)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
 
         elif model.lower() == "lnk_est":
             '''
@@ -299,7 +288,7 @@ class Cell:
 
             data = (mp, fr)
 
-            self.result = _ot.optimize(fobj, f, theta, data, bounds, True, num_trials, pathway)
+            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
 
         else:
             print("model name error")

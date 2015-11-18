@@ -13,7 +13,7 @@ created: 2015-02-24
 import numpy as _np
 import spikingtools as _st
 from scipy.linalg import toeplitz as _tpltz
-import optimizationtools as _ot
+import objectivetools as _obj
 from scipy import interpolate as interp
 import analysistools as _at
 import dataprocesstools as _dpt
@@ -29,7 +29,7 @@ def SG(theta, x_in):
     Input is x, dx/dt, and history(firing rate).
     '''
 
-    dx_in = deriv(x, 0.001)
+    # dx_in = deriv(x_in, 0.001)
     # need to implement
     y = _np.zeros(x_in.shape)
 
@@ -61,9 +61,9 @@ def SG_fobj(theta, x_in, y):
         The gradient of the objective function
     '''
 
-    C = 0.001
+    # C = 0.001
     dx_in = deriv(x_in, 0.001)
-    filt_len = 1000
+    # filt_len = 1000
 
     X = _np.zeros([3, x_in.size])
     X[0,:] = _np.ones(x_in.size)
@@ -151,7 +151,7 @@ def SC1D_fobj(theta, x_in, y):
         The gradient of the objective function
     '''
 
-    J, grad = _ot.fobjective_numel(_ot.log_diff_fobj, SC1D, theta, (x_in, y))
+    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SC1D, theta, (x_in, y))
 
     if False:
         dx_in = deriv(x_in, 0.001)
@@ -263,7 +263,7 @@ def SC1DF(theta, x_in):
     '''
 
     dx_in = deriv(x_in, 0.001)
-    #dx_in = deriv_backward(x_in, 0.001)
+    # dx_in = deriv_backward(x_in, 0.001)
 
     y = _st.SC1DF(theta, x_in, dx_in)
     h = _st.SC1DF_get_h(theta, x_in, dx_in)
@@ -302,7 +302,7 @@ def SC1DF_C(theta, x_in):
     '''
 
     dx_in = deriv(x_in, 0.001)
-    #dx_in = deriv_backward(x_in, 0.001)
+    # dx_in = deriv_backward(x_in, 0.001)
 
     y = _st.SC1DF(theta, x_in, dx_in)
 
@@ -335,7 +335,7 @@ def SC1DF_fobj(theta, x_in, y):
         The gradient of the objective function
     '''
 
-    J, grad = _ot.fobjective_numel(_ot.log_diff_fobj, SC1DF_C, theta, (x_in, y))
+    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SC1DF_C, theta, (x_in, y))
 
     if False:
         dx_in = deriv(x_in, 0.001)
@@ -482,7 +482,7 @@ def SC1DF_Impulse(theta, x_in, delta=1, index=0, input_mode='data'):
 
     if input_mode == 'data':
         x_impulse[index] = delta
-        x_in_p =  x_in + x_impulse
+        x_in_p = x_in + x_impulse
 
         y = _st.SC1DF(theta, x_in, dx_in)
         y_p = _st.SC1DF(theta, x_in_p, dx_in)
@@ -696,7 +696,7 @@ def SC_gain(theta, x_in):
         The gain of the spiking block.
     '''
 
-    V_mat = _tpltz([x_in[0],0,0,0,0,0,0],x_in)
+    # V_mat = _tpltz([x_in[0],0,0,0,0,0,0],x_in)
     c = _np.array([49/20, -6, 15/2, -20/3, 15/4, -6/5, 1/6])/0.001
     cg = c[0]
 
@@ -860,10 +860,10 @@ def SCI_gain(theta, x_in):
 
     y_est = sigmoid(theta.dot(X)) * sigmoid(theta.dot(Y))
     wx = _np.ones(y_est.shape) - sigmoid(theta.dot(X))
-    wy = _np.ones(y_est.shape) - sigmoid(theta.dot(Y))
+    # wy = _np.ones(y_est.shape) - sigmoid(theta.dot(Y))
 
-    cg = (49/20) / 0.001
-    #gain = y_est * ( wx*theta[1] + wy*cg*theta[3] )
+    # cg = (49/20) / 0.001
+    # gain = y_est * ( wx*theta[1] + wy*cg*theta[3] )
     gain = y_est * wx*theta[1]
 
     return gain
@@ -877,10 +877,10 @@ def SCI_gain1(theta, x, dx):
     Y = _np.array([0, 0, 1, dx])
     y_est = sigmoid(theta.dot(X)) * sigmoid(theta.dot(Y))
     wx = _np.ones(y_est.shape) - sigmoid(theta.dot(X))
-    wy = _np.ones(y_est.shape) - sigmoid(theta.dot(Y))
+    # wy = _np.ones(y_est.shape) - sigmoid(theta.dot(Y))
 
-    cg = (49/20) / 0.001
-    #gain = y_est * ( wx*theta[1] + wy*cg*theta[3] )
+    # cg = (49/20) / 0.001
+    # gain = y_est * ( wx*theta[1] + wy*cg*theta[3] )
     gain = y_est * wx*theta[1]
 
     return gain
@@ -988,8 +988,8 @@ def SCIF_fobj(theta, x_in, y):
     '''
     Spiking Continuous Independent Feedback(SCIF) objective
     '''
-    J, grad = _ot.fobjective_numel(_ot.log_diff_fobj, SCIF_C, theta, (x_in, y))
-    #J, grad = _ot.fobjective_numel(_ot.log_fobj, SCIF_C, theta, (x_in, y))
+    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SCIF_C, theta, (x_in, y))
+    # J, grad = _obj.fobjective_numel(_obj.log_fobj, SCIF_C, theta, (x_in, y))
 
     return J, grad
 
@@ -1090,8 +1090,8 @@ def SCIF2_fobj(theta, x_in, y):
     '''
     Spiking Continuous Independent Feedback(SCIF) objective
     '''
-    J, grad = _ot.fobjective_numel(_ot.log_diff_fobj, SCIF2_C, theta, (x_in, y))
-    #J, grad = _ot.fobjective_numel(_ot.log_fobj, SCIF_C, theta, (x_in, y))
+    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SCIF2_C, theta, (x_in, y))
+    # J, grad = _obj.fobjective_numel(_obj.log_fobj, SCIF_C, theta, (x_in, y))
 
     return J, grad
 
@@ -1194,9 +1194,9 @@ def SCIE_fobj(theta, x_in, y):
     '''
     likelihood objective function
     '''
-    #temp = _np.log(y_est)
-    #temp[_np.isinf(temp)] = -1e-6
-    #J = _np.sum(y_est - y*temp)
+    # temp = _np.log(y_est)
+    # temp[_np.isinf(temp)] = -1e-6
+    # J = _np.sum(y_est - y*temp)
 
     '''
     weighted objective function
@@ -1429,8 +1429,8 @@ def SCIEF_fobj(theta, x_in, y):
     '''
     Spiking Continuous Independent Feedback(SCIF) objective
     '''
-    J, grad = _ot.fobjective_numel(_ot.log_diff_fobj, SCIEF_C, theta, (x_in, y))
-    #J, grad = _ot.fobjective_numel(_ot.log_fobj, SCIEF_C, theta, (x_in, y))
+    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SCIEF_C, theta, (x_in, y))
+    # J, grad = _obj.fobjective_numel(_obj.log_fobj, SCIEF_C, theta, (x_in, y))
 
     return J, grad
 
@@ -1438,7 +1438,7 @@ def SCIEF_bnds():
     '''
     return SCIF bound constraints.
     '''
-    #bnds = ((None,None),(0,None),(None,None),(0,None),(None,None),(None,None),(None,None),(None,None),(None,None),(None,None),(0,None),(0,None))
+    # bnds = ((None,None),(0,None),(None,None),(0,None),(None,None),(None,None),(None,None),(None,None),(None,None),(None,None),(0,None),(0,None))
     bnds = ((None,None),(0,None),(None,None),(0,None),(None,None),(None,None),(None,None),(None,None),(None,None),(None,None),(0,None),(0,None),(0,None),(0,None))
 
     return bnds
@@ -1552,7 +1552,7 @@ def hist2d(X, Y, x, y, z):
 
     for i in range(X.shape[0]-1):
         for j in range(X.shape[1]-1):
-            #print(X[i,j], Y[i,j])
+            # print(X[i,j], Y[i,j])
             idx_x = (x > X[i,j]) * (x < X[i,j+1])
             idx_y = (y > Y[i,j]) * (y < Y[i+1,j])
             idx_sum = idx_x * idx_y
@@ -1623,7 +1623,7 @@ def gain2d(fgain, theta, X, Y, x, y, z):
         the 2-dimensional gain
     '''
 
-    hist_2d =  hist2d(X, Y, x, y, z)
+    hist_2d = hist2d(X, Y, x, y, z)
 
     gain = _np.zeros(X.shape)
 
@@ -1631,7 +1631,7 @@ def gain2d(fgain, theta, X, Y, x, y, z):
         y_lim = (hist_2d[i,:]>0)
         y_range = _np.arange(len(y_lim))
         y_range = y_range[y_lim]
-        #for j in range(X.shape[1]):
+        # for j in range(X.shape[1]):
         if (y_range.size):
             for j in y_range:
                 gain[i,j] = fgain(theta, X[i,j], Y[i,j])
@@ -1642,7 +1642,7 @@ def gain2d(fgain, theta, X, Y, x, y, z):
 
 def resp2d(f, theta, X, Y, x, y, z):
 
-    hist_2d =  hist2d(X, Y, x, y, z)
+    hist_2d = hist2d(X, Y, x, y, z)
 
     resp = _np.zeros(X.shape)
 
@@ -1650,7 +1650,7 @@ def resp2d(f, theta, X, Y, x, y, z):
         y_lim = (hist_2d[i,:]>0)
         y_range = _np.arange(len(y_lim))
         y_range = y_range[y_lim]
-        #for j in range(X.shape[1]):
+        # for j in range(X.shape[1]):
         if (y_range.size):
             for j in y_range:
                 resp[i,j] = f(theta, X[i,j], Y[i,j])
@@ -1759,7 +1759,7 @@ def SDF_orig(theta, x_in):
             r[i] = 1
 
             if (i < N - len_filt_fb):
-                #print(len(g[i+1:i+1+len_filt_fb]), len(filt_fb))
+                # print(len(g[i+1:i+1+len_filt_fb]), len(filt_fb))
                 g[i+1:i+1+len_filt_fb] += filt_fb
 
             else:
@@ -1771,7 +1771,7 @@ def SDF_fobj(theta, x_in, y):
     '''
     Spiking Continuous Independent Feedback(SCIF) objective
     '''
-    J, grad = _ot.fobjective_numel(_ot.log_diff_fobj, SDF, theta, (x_in, y))
+    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SDF, theta, (x_in, y))
 
     return J, grad
 
@@ -1786,10 +1786,10 @@ def SDF_bnds():
 import time
 def main():
     x = _np.sin(_np.linspace(0, 300*_np.pi, 300000))
-    #theta = _np.array([-1,1,0,0.1])
-    #temp = [1,1,0,0,1,100]
-    #theta = _np.array(temp)
-    #theta = _np.sin(_np.linspace(0, _np.pi, 6))
+    # theta = _np.array([-1,1,0,0.1])
+    # temp = [1,1,0,0,1,100]
+    # theta = _np.array(temp)
+    # theta = _np.sin(_np.linspace(0, _np.pi, 6))
     theta = _np.zeros(6)
     theta[0] = -1
     theta[1] = 1
@@ -1797,10 +1797,11 @@ def main():
     theta[3] = 0.1
     theta[4] = 0.1
     theta[5] = 100
-    #y = SC(theta, x)
+    # y = SC(theta, x)
     y1 = SCI(theta[:4], x)
     start_time = time.time()
     y = SCIF_C(theta, x)
+    print(len(y1), len(y))
     print("--- %s seconds ---" % str(time.time() - start_time))
 
 if __name__ == '__main__':

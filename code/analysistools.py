@@ -11,6 +11,8 @@ created: 2015-03-08
 (C) 2015 bongsoos
 '''
 
+import numpy as _np
+from scipy import interpolate as _interp
 
 '''
     Linear-Nonlinear(LN) Model
@@ -71,7 +73,7 @@ def LN(x, y, num_bins=30, M=1000):
     snl = snl + y_mean
     LN_est = LN_est + y_mean
 
-    return LN_est, L_est, f, snl, snlx 
+    return LN_est, L_est, f, snl, snlx
 
 
 
@@ -158,8 +160,8 @@ def SNL(linear_est, resp, num_bins):
     snl[-1] = _np.mean(pre_snl[N - last_bin:])
 
     fsnl = _interp.interp1d(snlx, snl, bounds_error=False)
-    #fsnl = _interp.interp1d(snlx, snl)
-    
+    # fsnl = _interp.interp1d(snlx, snl)
+
     snlx = _np.linspace(_np.min(snlx), _np.max(snlx), num_bins)
     snl = fsnl(snlx)
 
@@ -174,14 +176,14 @@ def SNL_eval(fsnl, linear_est, snlx, snl):
     index1 = _np.zeros(linear_est.shape)
     index2 = _np.zeros(linear_est.shape)
 
-    index1 = _np.floor((linear_est - _np.min(snlx)) / delta_bin) + 1;
-    index1 = ((index1 >= 1)*(index1 <=num_bins)) * index1 +  (index1 < 1) + (index1 > num_bins)*num_bins
+    index1 = _np.floor((linear_est - _np.min(snlx)) / delta_bin) + 1
+    index1 = ((index1 >= 1)*(index1 <=num_bins)) * index1 + (index1 < 1) + (index1 > num_bins)*num_bins
 
     index2 = index1 + ((index1 > 1) * (index1 < num_bins))
 
     LN_est = snl[index1] + ((linear_est - snlx[index1])/delta_bin) * (snl[index2]-snl[index1])
 
-    #LN_est = _np.zeros(linear_est.size)
+    # LN_est = _np.zeros(linear_est.size)
 
     lest_sorted = _np.sort(linear_est)
     sorted_index = _np.argsort(linear_est)
@@ -192,3 +194,5 @@ def SNL_eval(fsnl, linear_est, snlx, snl):
         LN_est[i] = fsnl(linear_est[i])
 
     return LN_est
+
+

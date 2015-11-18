@@ -15,7 +15,7 @@ import numpy as _np
 from scipy.linalg import orth as _orth
 import kineticblocks as _kb
 import spikingblocks as _sb
-import optimizationtools as _ot
+import objectivetools as _obj
 
 
 def LNKS(theta, stim, pathway=1):
@@ -112,7 +112,7 @@ def LNKS_fobj(theta, stim, y, pathway=1):
     '''
 
     J = LNKS_fobj_helper(LNKS_f, theta, stim, y, pathway)
-    grad = _ot.fobj_numel_grad(LNKS_fobj_helper, LNKS_f, theta, stim, y, pathway)
+    grad = _obj.fobj_numel_grad(LNKS_fobj_helper, LNKS_f, theta, stim, y, pathway)
 
     return J, grad
 
@@ -127,8 +127,8 @@ def LNKS_fobj_helper(f, theta, stim, y, pathway=1):
     y_est = f(theta, stim, pathway)
 
     # linear combination of objective functions
-    J_poss = _ot.poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
-    J_mse = _ot.mse_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    J_mse = _obj.mse_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
     J = J_poss + J_mse
 
     return J
@@ -162,7 +162,7 @@ def LNKS_MP_fobj(theta, stim, y_data, pathway=1):
     '''
 
     J = LNKS_MP_fobj_helper(LNKS_MP_f, theta, stim, y_data, pathway)
-    grad = _ot.fobj_numel_grad(LNKS_MP_fobj_helper, LNKS_MP_f, theta, stim, y_data, pathway)
+    grad = _obj.fobj_numel_grad(LNKS_MP_fobj_helper, LNKS_MP_f, theta, stim, y_data, pathway)
 
     return J, grad
 
@@ -192,9 +192,9 @@ def LNKS_MP_fobj_helper(f, theta, stim, y_data, pathway=1):
     y_mp_est, y_fr_est = f(theta, stim, pathway)
 
     # linear combination of objective functions
-    J_mp = _ot.mse_weighted_loss(y_mp, y_mp_est, len_section=10000, weight_type="std")
-    J_fr_poss = _ot.poisson_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
-    J_fr_mse = _ot.mse_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
+    J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=10000, weight_type="std")
+    J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
+    J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
     J_fr = J_fr_poss + J_fr_mse
 
     J = J_mp + J_fr
@@ -419,7 +419,7 @@ def LNK_fobj(theta, stim, y, pathway=1):
     '''
 
     J = LNK_fobj_helper(LNK_f, theta, stim, y, pathway)
-    grad = _ot.fobj_numel_grad(LNK_fobj_helper, LNK_f, theta, stim, y, pathway)
+    grad = _obj.fobj_numel_grad(LNK_fobj_helper, LNK_f, theta, stim, y, pathway)
 
     return J, grad
 
@@ -433,7 +433,7 @@ def LNK_fobj_helper(LNK_f, theta, stim, y, pathway=1):
 
     v = LNK_f(theta, stim, pathway)
 
-    J = _ot.mse_weighted_loss(y, v, len_section=10000, weight_type="std")
+    J = _obj.mse_weighted_loss(y, v, len_section=10000, weight_type="std")
 
     return J
 
@@ -444,10 +444,10 @@ def LNK_bnds(pathway=1):
     '''
 
     if pathway == 1:
-        bnds = L_bnds + N_bnds + K_bnds
+        bnds = L_bnds() + N_bnds() + K_bnds()
 
     elif pathway == 2:
-        bnds = (L_bnds + N_bnds + K_bnds + W_bnds) * 2
+        bnds = (L_bnds() + N_bnds() + K_bnds() + W_bnds()) * 2
 
     else:
         raise ValueError('The pathway parameter should be 1 or 2')
