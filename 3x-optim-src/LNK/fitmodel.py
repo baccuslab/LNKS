@@ -10,28 +10,28 @@ created: 2015-03-10
 (C) 2015 bongsoos
 '''
 
-import os, sys
+import os
+import sys
+import cellclass as ccls
 import loaddatatools as ldt
 import spikingblocks as sb
 import optimizationtools as ot
-import analysistools as at
+import statstools as stats
 import lnkstools as lnks
 import numpy as np
 import pickle
-from scipy.stats import pearsonr
 
 models = {
-        "LNK" : lnks.LNK_f,
-        #"LNKS":
-        }
+    "LNK": lnks.LNK_f,
+    }
 
 objectives = {
-        "LNK" : lnks.LNK_fobj,
-        }
+    "LNK": lnks.LNK_fobj,
+    }
 
 bounds = {
-        "LNK": lnks.LNK_bnds,
-        }
+    "LNK": lnks.LNK_bnds,
+    }
 
 
 def main():
@@ -43,21 +43,20 @@ def main():
     cross-validation fitting
     '''
 
-    cell_num, model, pathway, objective, crossval, init_num_LNK = get_env()
+    # get environmental variables
+    cell_num, model, pathway, objective, crossval, init_num_LNK, num_optims = get_env()
 
-    if (crossval == "True") and (not cell_num == "allcells"):
-        crossval_fitting(cell_num, model, objective)
+    # fit model
+    cell = fit(cell_num, model, np.int(pathway), objective, init_num_LNK, crossval, np.int(num_optims))
 
-    else:
-        if cell_num == "allcells":
-            allcells_fitting(cell_num, model, objective)
-        else:
-            regular_fitting(cell_num, model, pathway, objective, init_num_LNK)
+    # print results
+    print_results(cell)
 
 
-def regular_fitting(cell_num, model, pathway, objective, init_num_LNK):
+
+def fit(cell_num, model, pathway, objective, init_num_LNK, crossval, num_optims):
     '''
-    fit one cell
+    Fit one cell
 
     Inputs
     ------
@@ -65,8 +64,26 @@ def regular_fitting(cell_num, model, pathway, objective, init_num_LNK):
     model (string) : type of model optimized
     pathway (int) : number of pathways for LNK or LNKS model (1 or 2)
     objective (string): type of objective function optimized
+    crossval (string): cross-validation 'True' or 'False'
     init_num_LNK (string) : initial parameter of LNK model
+    num_optims (int):
+        Number of optimization repeated.
+        One optimization is MAX_ITER iteration(step gradient).
+        Total iteration would be Tot_Iter = MAX_ITER * num_optims
+        This way, the optimization process can keep track of intermediate
+        cost values, cross-validation(test values) values, and other intermediate
+        statistics.
+        For each optimization, results are saved
+
+    Optimization
+    ------------
+        Using the objective function fobj, model function f, and initial parameter theta_init,
+        optimize the model and get results, using the method of the cell class.
+        cellclass.py module is assumed to be available and in the PYTHONPATH
+        optimizationtools.py is assumed to be available and in the PYTHONPATH
+        cell.fit: (function, method)
     '''
+
     # load cell data
     cell = ldt.loadcell(cell_num)
 
@@ -74,169 +91,112 @@ def regular_fitting(cell_num, model, pathway, objective, init_num_LNK):
     f = models[model]
     fobj = objectives[objective]
     bnds = bounds[model]
-
+    bound = bnds(pathway=pathway)
 
     # get initials
-    # filename = cell_num + '.initial'
-    # initial parameter filename
-    if cell_num in ['g4','g6','g8','g9','g13','g15','g17','g12','g17','g19','g20']:
-        filename = 'g9apb.initial'
-    else:
-        filename = cell_num + '.initial'
-
     # load LNK initial data
     filename = init_num_LNK + '.initial'
     theta_init = get_initial(filename)
 
-    # Optimization
-    cell = optimize(cell, cell_num, fobj, f, theta_init, model, bnds)
-    cell.saveresult(cell_num+'_results.pickle')
-    printresults(cell)
 
-    print("optimization finished")
+    # save results to these matrices
+    thetas = np.zeros([num_optims+1, theta_init.size])
+    funs = np.zeros(num_optims+1)
+    ccs = np.zeros(num_optims+1)
 
+    # compute initial objective value and correlation coefficient
+    thetas[0,:] = theta_init
+    funs[0], ccs[0] = compute_init_values(cell, theta_init, model, fobj, f, pathway)
 
-def crossval_fitting(cell_num, model, objective):
-    '''
-    fit each cell using the training data of [1s, 10s, 20s, 50s, 100s, 150s, 200s, 240s]
-    and test on the test data.
-    '''
-    cell = ldt.loadcell(cell_num)
-    f = models[model]
-    fobj = objectives[objective]
-    bnds = bounds[model]
+    # Run Optimization
+    print("This is in optimize function")
+    print("%30s %12s %12s" %("Optimization Process(%)","funs", "corrcoef"))
+    print("%30.2f %12.5f %12.5f" %(0, funs[0],ccs[0]))
+    for i in range(1, num_optims+1):
+        cell.fit(fobj, f, theta_init, model, bound, pathway=pathway)
+        thetas[i,:], funs[i], ccs[i] = get_results(cell)
+        theta_init = thetas[i,:]
 
-    if model.lower() == "scif":
-        theta_size = 6
-    elif model.lower() == "scie":
-        theta_size = 10
+        print("%30.2f %12.5f %12.5f" %( (i/num_optims * 100), funs[i], ccs[i]))
+
+    save_results(cell, cell_num, thetas, funs, ccs)
+
+    return cell
+
+'''
+    # cross-validation
+    if (crossval == "True") and (not cell_num == "allcells"):
+        crossval_fitting(cell_num, model, objective)
+
     else:
-        theta_size = 4
-    train_data = np.array([1, 10, 20, 50, 100, 150, 200, 240])
-    corrcoef_crossval = np.zeros(train_data.shape)
-    theta_crossval = np.zeros((train_data.size, theta_size))
-
-    k = 0
-    mp_true = cell.mp
-    fr_true = cell.fr
-    norm_range = np.arange(1000, 299000)
-    mp_true = mp_true - np.min(mp_true[norm_range])
-    mp_true = mp_true/np.max(mp_true[norm_range])
-    fr_true = fr_true/np.max(fr_true[norm_range])
-    for i in train_data:
-        train_range = np.arange(1000, (i+1)*1000)
-        test_range = np.arange((i+1)*1000, 300000)
-
-        mp_test = mp_true[test_range]
-        fr_test = fr_true[test_range]
-
-        cell.mp = mp_true[train_range]
-        cell.fr = fr_true[train_range]
-
-        # get initials
-        if model == "SCIF":
-            # initial parameter filename
-            if cell_num in ['g4','g12']:
-                filename = 'g15.initial'
-            else:
-                filename = cell_num + '.initial'
-            theta_init = np.zeros(6)
-            theta_init[:4] = get_initial(filename)
-            theta_init[4] = 0
-            theta_init[5] = 100
-
-        elif model == "SCIE":
-            theta_init = np.zeros(10)
-            filename = "allcells.initial"
-            theta_init = get_initial(filename)
-
+        if cell_num == "allcells":
+            allcells_fitting(cell_num, model, objective)
         else:
-            print(" Error in model name")
+            regular_fitting(cell_num, model, np.int(pathway), objective, init_num_LNK)
+'''
 
-        cell = optimize(cell, cell_num, fobj, f, theta_init, model, bnds)
+def save_results(cell, cell_num, thetas, funs, ccs):
+    '''
+    Save optimization results
+    '''
 
-        fr_est = f(cell.result['theta'], mp_test)
-        #corrcoef_crossval[k] = pearsonr(fr_test, fr_est)[0]
-        corrcoef_crossval[k] = at.corrcoef(fr_test, fr_est)
-        theta_crossval[k,:] = cell.result['theta']
+    cell.result["thetas"] = thetas
+    cell.result["funs"] = funs
+    cell.result["corrcoefs"] = ccs
+    cell.result["fun_init"] = funs[0]
+    cell.result["corrcoef_init"] = ccs[0]
 
-        k += 1
-
-    cell.result['corrcoef_crossval'] = corrcoef_crossval
-    cell.result['theta_crossval'] = theta_crossval
     cell.saveresult(cell_num+'_results.pickle')
-    printresults(cell)
 
-    print("optimization finished")
+    return
 
 
-def allcells_fitting(cell_num, model, objective):
+def get_results(cell):
     '''
-    fit all cells together to get the average spiking block(the common spiking block) that captures
-    all the spikings in all the cells as much as possible
+    Get optimization results
     '''
-    cells = ldt.loadcells()
+    result = cell.result
 
-    norm_range = np.arange(1000,299000)
-    #N = cells['g9'].st.size
-    N = norm_range.size
-    keys = [key for key in cells.keys() if not key in ['g4','g12']]
+    theta = result["theta"]
+    fun = result["fun"]
+    corrcoef = result["corrcoef"]
 
-    mp = np.zeros(N * len(keys))
-    fr = np.zeros(N * len(keys))
+    return theta, fun, corrcoef
 
-    i = 0
-    for key in keys:
-        temp_mp = cells[key].mp[norm_range]
-        temp_mp = temp_mp - np.min(temp_mp)
-        temp_mp = temp_mp / np.max(temp_mp)
 
-        temp_fr = cells[key].fr[norm_range]
-        temp_fr = temp_fr / np.max(temp_fr)
+def compute_init_values(cell, theta_init, model, fobj, f, pathway):
+    '''
+    Compute the initial objective function value, correlation
 
-        mp[i*N:(i+1)*N] = temp_mp
-        fr[i*N:(i+1)*N] = temp_fr
+    Outputs
+    -------
+    fun_init (double):
+        Initial objective value
 
-        i += 1
+    cc_init (double):
+        Initial correlation coefficient
 
-    cell = ldt.loadcell('g9')
+    '''
+    data = ccls.get_data(cell, model, pathway)
 
-    cell.mp = mp
-    cell.fr = fr
-
-    f = models[model]
-    fobj = objectives[objective]
-    bnds = bounds[model]
-
-    # initial parameter filename
-    filename = 'g17.initial'
-
-    # get initials
-    if model == "SCIF":
-        theta_init = np.zeros(6)
-        theta_init[:4] = get_initial(filename)
-        theta_init[4] = 0
-        theta_init[5] = 100
-
-    elif model == "SCIE":
-        theta_init = np.zeros(10)
-        theta_init[:4] = get_initial(filename)
+    if pathway:
+        y_init = f(theta_init, data[0], pathway=pathway)
+        cc_init = stats.corrcoef(y_init, data[1])
+        fun_init, grad_init = fobj(theta_init, data[0], data[1], pathway=pathway)
 
     else:
-        print(" Error in model name")
+        y_init = f(theta_init, data[0])
+        cc_init = stats.corrcoef(y_init, data[1])
+        fun_init, grad_init = fobj(theta_init, data[0], data[1])
 
-    cell = optimize(cell, cell_num, fobj, f, theta_init, model, bnds)
-    cell.saveresult(cell_num+'_results.pickle')
-    printresults(cell)
-
-    print("optimization finished")
+    return fun_init, cc_init
 
 
 def get_env():
     '''
     Assigning input environmental variables to parameters
     '''
-    return sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],  sys.argv[5]
+    return sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],  sys.argv[5],  sys.argv[6],  sys.argv[7]
 
 def get_initial(filename):
     '''
@@ -250,51 +210,35 @@ def get_initial(filename):
     return theta_init
 
 
-
-def optimize(cell, cell_num, fobj, f, theta_init, model, bnds, num_trials=1, pathway=None):
+def print_results(cell):
     '''
-    * Optimization *
-        Using the objective function fobj, model function f, and initial parameter theta_init,
-        optimize the model and get results, using the method of the cell class.
-        cellclass.py module is assumed to be available and in the PYTHONPATH
-        optimizationtools.py is assumed to be available and in the PYTHONPATH
+    Print the final optimization results that will be used to create 3x results
 
-        cell.fit: (function, method)
-            Inputs
-            ------
-                f(theta, x_in)
-                fobj(theta, x_in, y)
+    Outputs
+    -------
+    fun
+    corrcoef
+    fun_inits
+    corrcoef_inits
+    succ
     '''
-
-    print("this is in optimize function")
-    bound = bnds(pathway=pathway)
-    cell.fit(fobj, f, theta_init, model, bound, num_trials=num_trials, pathway=pathway)
-
-    return cell
-
-def printresults(cell):
     fun = np.max(cell.result['fun'])
-    if np.isnan(fun) or (fun == None):
+    if np.isnan(fun) or (fun is None):
         fun = 0
     corrcoef = np.max(cell.result['corrcoef'])
-    if np.isnan(corrcoef) or (corrcoef == None):
+    if np.isnan(corrcoef) or (corrcoef is None):
         corrcoef = 0
-    fun_inits = np.max(cell.result['fun_inits'])
-    if np.isnan(fun_inits) or (fun_inits == None):
-        fun_inits = 0
-    corrcoef_inits = np.max(cell.result['corrcoef_inits'])
-    if np.isnan(corrcoef_inits) or (corrcoef_inits == None):
-        corrcoef_inits = 0
-    if cell.result['success'] == True:
-        succ = 1
-    elif cell.result['success'] == False:
-        succ = 0
+    fun_init = np.max(cell.result['fun_init'])
+    if np.isnan(fun_init) or (fun_init is None):
+        fun_init = 0
+    corrcoef_init = np.max(cell.result['corrcoef_init'])
+    if np.isnan(corrcoef_init) or (corrcoef_init is None):
+        corrcoef_init = 0
 
     print("cost function value: %12.4f" % fun)
     print("correlation coefficient: %12.4f" % corrcoef)
-    print("initial cost function value: %12.4f" % fun_inits)
-    print("initial correlation coefficient: %12.4f" % corrcoef_inits)
-    print("optimization output status: %d" %succ)
+    print("initial cost function value: %12.4f" % fun_init)
+    print("initial correlation coefficient: %12.4f" % corrcoef_init)
 
 
 '''

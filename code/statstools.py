@@ -21,3 +21,15 @@ def corrcoef(x, y):
     cc = (_np.matrix(_np.cov(x, y)) / (V*V.T + 1e-12))
 
     return cc[0,1]
+
+
+def variance_explained(y, y_est):
+    '''
+    Computes explained variance
+    '''
+    SYY = sum((y - _np.mean(y))**2)
+    RSS = sum((y - y_est)**2)
+
+    R2 = 1 - RSS/SYY
+
+    return R2

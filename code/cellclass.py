@@ -140,16 +140,16 @@ class Cell:
         v = v / _np.max(v[20000:])
 
         self.LNKS_est = {
-                'f': f,
-                'g': g,
-                'u': u,
-                'thetaK': thetaK,
-                'X': X,
-                'v': mp,
-                'v_est': v,
-                'r': fr,
-                'r_est': r,
-                }
+            'f': f,
+            'g': g,
+            'u': u,
+            'thetaK': thetaK,
+            'X': X,
+            'v': mp,
+            'v_est': v,
+            'r': fr,
+            'r_est': r,
+            }
 
 
     def LNK(self, param):
@@ -167,14 +167,14 @@ class Cell:
         f, g, u, thetaK, X, v = _lnks.LNK(param, st)
 
         self.LNK_est = {
-                'f': f,
-                'g': g,
-                'u': u,
-                'thetaK': thetaK,
-                'X': X,
-                'v_est': v,
-                'v': mp,
-                }
+            'f': f,
+            'g': g,
+            'u': u,
+            'thetaK': thetaK,
+            'X': X,
+            'v_est': v,
+            'v': mp,
+            }
 
 
     def Spiking(self, f, f_get_h, f_gain, theta):
@@ -214,84 +214,23 @@ class Cell:
         ### need to be implemented
 
 
-    def fit(self, fobj, f, theta, model, bnds=None, num_trials=1, pathway=None):
+    def fit(self, fobj, f, theta, model, bnds=None, pathway=None):
         '''
         Fit model to the cell data
 
         Input
         -----
         options (dictionary):
-            'fobj':
-            'f':
-            'theta':
-            'model':
+            'fobj': objective function
+            'f': model function
+            'theta': model parameter
+            'model': model type
+            'bnds': model parameter boundary
+            'pathway': LNK pathway (1, 2)
         '''
 
-        if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
-            '''
-            Fitting Spiking Blocks
-            '''
-
-            mp = self.mp - _np.min(self.mp)
-            mp = mp / _np.max(mp)
-            fr = self.fr / _np.max(self.fr)
-
-            data = (mp, fr)
-
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
-
-        elif model.lower() == "lnks":
-            '''
-            Fitting LNKS model using only firing rate as an output
-            '''
-            st = normalize_stim(self.stim)
-            fr = self.fr / _np.max(self.fr)
-
-            data = (st, fr, pathway)
-
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
-
-
-        elif model.lower() == "lnks_mp":
-            '''
-            Fitting LNKS model using both membrane potential and firing rate as outputs
-            '''
-            st = normalize_stim(self.stim)
-            mp = self.mp - _np.min(self.mp)
-            mp = mp / _np.max(mp)
-            fr = self.fr / _np.max(self.fr)
-
-            outputs = [mp, fr]
-
-            data = (st, outputs, pathway)
-
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
-
-        elif model.lower() == "lnk":
-            '''
-            Fitting LNK model to the membrane potential
-            '''
-            st = normalize_stim(self.stim)
-            mp = self.mp - _np.min(self.mp)
-            mp = mp / _np.max(mp)
-
-            data = (st, mp, pathway)
-
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
-
-        elif model.lower() == "lnk_est":
-            '''
-            Fitting Spiking model to the firing rate using the LNK model estimate.
-            '''
-            mp = self.v_est
-            fr = self.fr / _np.max(self.fr)
-
-            data = (mp, fr)
-
-            self.result = _ot.optimize(fobj, f, theta, data, bnds, True, num_trials, pathway)
-
-        else:
-            print("model name error")
+        data = get_data(self, model, pathway)
+        self.result = _ot.optimize(fobj, f, theta, data, bnds, True, pathway)
 
 
     def predict(self, f, theta, model, pathway=None):
@@ -397,7 +336,7 @@ class Cell:
         textdata = mat['textdata']
         textdata = textdata[0]
         data = mat['data']
-        colheader = mat['colheaders']
+        # colheader = mat['colheaders']
 
         count = 0
         dic = {'mp':0, 'apb':0}
@@ -476,7 +415,7 @@ class Cell:
         contrast = _np.zeros(num_section)
 
         for i in range(num_section):
-            st = self.stim[i*section_length : (i+1)*section_length]
+            st = self.stim[i*section_length:(i+1)*section_length]
             contrast[i] = _np.std(st) / mu
 
         self.contrast = contrast
@@ -572,7 +511,7 @@ class Cell:
         for i in range(N):
             diff = self.resps[i,:] - self.mps[i,:]
             diff[diff<threshold] = 0
-            #locs = _fpk(diff, _np.arange(1,2))
+            # locs = _fpk(diff, _np.arange(1,2))
             _max, _min = _pd(diff, None, 2)
             locs = [p[0] for p in _max]
             self.spikes[i,locs] = 1
@@ -634,6 +573,79 @@ class Cell:
         temph = _dpt.highpassfilter(self.mp, fc)
         templ = _dpt.lowpassfilter(_np.real(temph), filt_len, num_rep)
         self.mp = _np.real(templ)
+
+
+
+def get_data(cell, model, pathway=None):
+    '''
+    get data tuple for model optimization
+
+    Input
+    -----
+    cell (cellclass)
+    model (string)
+
+    Output
+    ------
+    data (tuple)
+    '''
+
+    if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
+        '''
+        Fitting Spiking Blocks
+        '''
+
+        mp = cell.mp - _np.min(cell.mp)
+        mp = mp / _np.max(mp)
+        fr = cell.fr / _np.max(cell.fr)
+
+        data = (mp, fr)
+
+    elif model.lower() == "lnks":
+        '''
+        Fitting LNKS model using only firing rate as an output
+        '''
+        st = normalize_stim(cell.stim)
+        fr = cell.fr / _np.max(cell.fr)
+
+        data = (st, fr, pathway)
+
+    elif model.lower() == "lnks_mp":
+        '''
+        Fitting LNKS model using both membrane potential and firing rate as outputs
+        '''
+        st = normalize_stim(cell.stim)
+        mp = cell.mp - _np.min(cell.mp)
+        mp = mp / _np.max(mp)
+        fr = cell.fr / _np.max(cell.fr)
+
+        outputs = [mp, fr]
+
+        data = (st, outputs, pathway)
+
+    elif model.lower() == "lnk":
+        '''
+        Fitting LNK model to the membrane potential
+        '''
+        st = normalize_stim(cell.stim)
+        mp = cell.mp - _np.min(cell.mp)
+        mp = mp / _np.max(mp)
+
+        data = (st, mp, pathway)
+
+    elif model.lower() == "lnk_est":
+        '''
+        Fitting Spiking model to the firing rate using the LNK model estimate.
+        '''
+        mp = cell.v_est
+        fr = cell.fr / _np.max(cell.fr)
+
+        data = (mp, fr)
+
+    else:
+        print("model name error")
+
+    return data
 
 
 def normalize_stim(stim):
