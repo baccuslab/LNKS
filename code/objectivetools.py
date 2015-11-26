@@ -11,6 +11,7 @@ created: 2015-02-26
 '''
 
 import numpy as _np
+import time
 
 def fobjective_numel(fobj, f, theta, data):
     '''
@@ -92,8 +93,7 @@ def log_fobj_weighted(f, theta, x_in, y):
     -----
     x_in (ndarray)
     theta (ndarray)
-    y (ndarray):
-        The firing rate data.
+    y (ndarray): The firing rate data.
 
     Output
     ------
@@ -155,24 +155,18 @@ def mse_weighted_loss(y, y_est, len_section=10000, weight_type="std"):
     '''
 
     num_section = _np.int(_np.floor(y.size / len_section))
-    J = _np.zeros(num_section)
-    for i in range(num_section):
-        # data range
-        if i == 0:
-            x_range = _np.arange(1000,len_section*(i+1))
-        else:
-            x_range = _np.arange(i*len_section, (i+1)*len_section)
 
-        # weight
-        if weight_type == "std":
-            weight = _np.std(y[x_range]) + 1e-6
-        elif weight_type == "mean":
-            weight = _np.mean(y[x_range]) + 1e-3
+    y_list = [y[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
+    y_est_list = [y_est[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
 
-        J[i] = mse_loss(y[x_range], y_est[x_range]) * (weight**2)
+    # weights
+    if weight_type == "std":
+        J = _np.sum(_np.array([mse_loss(y_list[i], y_est_list[i])/((_np.std(y_list[i])+1e-6)**2) for i in range(len(y_list))]))
 
+    elif weight_type == "mean":
+        J = _np.sum(_np.array([mse_loss(y_list[i], y_est_list[i])/((_np.mean(y_list[i])+1e-3)**2) for i in range(len(y_list))]))
 
-    return _np.sum(J)
+    return J
 
 
 def mse_loss(y, y_est):
@@ -217,23 +211,19 @@ def poisson_weighted_loss(y, y_est, len_section=10000, weight_type="std"):
     '''
 
     num_section = _np.int(_np.floor(y.size / len_section))
-    J = _np.zeros(num_section)
-    for i in range(num_section):
-        # data range
-        if i == 0:
-            x_range = _np.arange(1000,len_section*(i+1))
-        else:
-            x_range = _np.arange(i*len_section, (i+1)*len_section)
 
-        # weight
-        if weight_type == "std":
-            weight = _np.std(y[x_range]) + 1e-6
-        elif weight_type == "mean":
-            weight = _np.mean(y[x_range]) + 1e-3
+    y_list = [y[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
+    y_est_list = [y_est[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
 
-        J[i] = poisson_loss(y[x_range], y_est[x_range]) / (weight**2)
+    # weights
+    if weight_type == "std":
+        weights = _np.array(list(map(_np.std, y_list))) + 1e-6
+    elif weight_type == "mean":
+        weights = _np.array(list(map(_np.mean, y_list))) + 1e-3
 
-    return _np.sum(J)
+    J = _np.sum(_np.array(list(map(poisson_loss, y_list, y_est_list))) / (weights**2))
+
+    return J
 
 
 def poisson_loss(y, y_est):
@@ -253,15 +243,16 @@ def poisson_loss(y, y_est):
     '''
 
     # likelihood objective function
-    temp = _np.log(y_est)
-    temp[_np.isinf(temp)] = -1e-6
+    eps = 1e-6
+    temp = _np.log(y_est+eps)
+    temp[_np.isinf(temp)] = -eps
     J = _np.sum(y_est - y*temp)
 
     return J
 
 
 
-def fobj_numel_grad(fobj, f, theta, x_in, y, *args):
+def fobj_numel_grad(fobj, f, theta, x_in, y, options):
     '''
     numerical gradient
     :param fobj:
@@ -271,37 +262,26 @@ def fobj_numel_grad(fobj, f, theta, x_in, y, *args):
     :param y:
     :return:
     '''
-    if len(args) != 0:
-        pathway = args[0]
-        J0 = fobj(f, theta, x_in, y, pathway) # evaluate function value at original point
-    else:
-        pathway = None
-        J0 = fobj(f, theta, x_in, y) # evaluate function value at original point
 
-    grad = _np.zeros(theta.shape)
     h = 0.00001
+    thetas = perturbed_thetas(theta, h)
+    thetas.append(theta)
 
-    # iterate over all indexes in theta
-    it = _np.nditer(theta, flags=['multi_index'], op_flags=['readwrite'])
-    while not it.finished:
+    Jhs = [fobj(f, thetas[i], x_in, y, options) for i in range(len(thetas))]
+    J0s = _np.array([Jhs[-1]] * theta.size)
+    Jhs.pop()
 
-        # evaluate function at theta+h
-        i0 = it.multi_index
-        theta[i0] += h # increment by h
-
-        # evaluate f(theta+h)
-        if pathway:
-            Jh = fobj(f, theta, x_in, y, pathway)
-        else:
-            Jh = fobj(f, theta, x_in, y)
-
-        theta[i0] -= h # restore to previous value (very important!)
-
-        # compute the partial derivative
-        grad[i0] = (Jh - J0) / h # the slope
-        it.iternext() # step to next dimension
+    grad = (_np.array(Jhs) - J0s)/h
 
     return grad
+
+def perturbed_thetas(theta, h):
+    return [add(theta, h, i) for i in range(theta.size)]
+
+def add(theta, h, i):
+    temp = _np.zeros(theta.size)
+    temp[i] = h
+    return (theta + temp)
 
 def eval_numerical_gradient(f, theta, x_in, y):
     """
