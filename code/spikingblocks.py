@@ -17,6 +17,7 @@ import objectivetools as _obj
 from scipy import interpolate as interp
 import analysistools as _at
 import dataprocesstools as _dpt
+import pdb
 
 
 '''
@@ -242,7 +243,7 @@ def SC1D_gain(theta, x_in):
 '''
     Spiking Continuous 1-D Feedback (SC1DF) model (1-D approximation of higher order firing rate model).
 '''
-def SC1DF(theta, x_in):
+def SC1DF(theta, x_in, options=None):
     '''
     Spiking Continuous 1-D model.
     Compute the very basic continuous 1D nonlinearity(sigmoid) spiking block with feedback.
@@ -272,16 +273,18 @@ def SC1DF(theta, x_in):
     b = h - x_in
 
     theta_fb = theta[3:]
-    len_fb = 5000
+    # len_fb = 5000
+    len_fb = 1000
     t = _np.arange(len_fb)
     fb1 = theta_fb[0] * _np.exp( -t / theta_fb[1])
     fb2 = theta_fb[2] * _np.exp( -t / theta_fb[3])
-    fb3 = theta_fb[4] * _np.exp( -t / theta_fb[5])
-    fb = (fb1 + fb2)/2 + fb3
+    # fb3 = theta_fb[4] * _np.exp( -t / theta_fb[5])
+    # fb = (fb1 + fb2)/2 + fb3
+    fb = (fb1 + fb2)/2
 
     return y, h, gain, fb, b
 
-def SC1DF_C(theta, x_in):
+def SC1DF_C(theta, x_in, options=None):
     '''
     Spiking Continuous 1-D model.
     Compute the very basic continuous 1D nonlinearity(sigmoid) spiking block.
@@ -312,7 +315,7 @@ def SC1DF_C(theta, x_in):
 '''
     Spiking Continuous 1-D Feedback(SC1DF) objective functions, gradient, gain
 '''
-def SC1DF_fobj(theta, x_in, y):
+def SC1DF_fobj(theta, x_in, y, options=None):
     '''
     Objective function and its gradient
     Likelihood objective function and its gradient of Spiking Continuous(SC) spiking model.
@@ -335,39 +338,36 @@ def SC1DF_fobj(theta, x_in, y):
         The gradient of the objective function
     '''
 
-    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SC1DF_C, theta, (x_in, y))
+    J = SC1DF_fobj_helper(SC1DF_C, theta, x_in, y, options)
 
-    if False:
-        dx_in = deriv(x_in, 0.001)
+    if options['is_grad']:
+        grad = _obj.fobj_numel_grad(SC1DF_fobj_helper, SC1DF_C, theta, x_in, y, options)
+        return J, grad
+    else:
+        return J
 
-        X = _np.zeros([3, x_in.size])
-        X[0,:] = _np.ones(x_in.size)
-        X[1,:] = x_in
-        X[2,:] = dx_in
 
-        y_est = sigmoid(theta.dot(X))
+def SC1DF_fobj_helper(f, theta, stim, y, options):
+    '''
+    LNKS model objective function helper function
 
-        '''
-        likelihood objective function
-        '''
-        temp = _np.log(y_est)
-        temp[_np.isinf(temp)] = -1e-6
-        J = _np.sum(y_est - y*temp)
+    Weighted sum of log-likelihood and mean-square error
+    '''
 
-        '''
-        gradient of the objective function
-        '''
-        e = y_est - y
-        w = _np.ones(y_est.shape) - y_est
-        grad = _np.sum(e * w * X,1)
+    y_est = f(theta, stim, options['pathway'])
 
-    return J, grad
+    # linear combination of objective functions
+    J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    J_mse = _obj.mse_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    J = J_poss + J_mse
 
-def SC1DF_bnds():
+    return J
+
+def SC1DF_bnds(pathway=None):
     '''
     return SCIF bound constraints.
     '''
-    numFB = 3
+    numFB = 2
     thr_bnds = ((None,None),(None,None),(None,None))
     fb_bnds = tuple([(0,None) for i in range(numFB*2)])
 
