@@ -13,13 +13,14 @@ import numpy as _np
 import statstools as _stats
 from scipy.optimize import minimize
 from scipy.stats import pearsonr
+import pdb
 
 # Optimization options
 DISP=False
 MAX_ITER=1
 
 
-def optimize(fobj, f, theta, data, bnds=None, grad=False, pathway=None):
+def optimize(fobj, f, theta, data, bnds=None, options=None):
     '''
     Optimization using scipy.optimize.minimize module
 
@@ -35,38 +36,52 @@ def optimize(fobj, f, theta, data, bnds=None, grad=False, pathway=None):
             input and output data
         bnds (tuple of tuples or None):
             Boundaries of model parameters
-        grad (Bool):
-            True if using gradient for optimization, else False
-        pathway (int):
-            LNK model pathway (1, 2, otherwise None)
+        options (dictionary)
+            grad (Bool):
+                True if using gradient for optimization, else False
+            pathway (int):
+                LNK model pathway (1, 2, otherwise None)
+
+    Output
+    ------
+        result
+            theta: estimated parameter
+            success: optimization converged
+            fun: objective value
+            corrcoef: correlation coefficient
+            evar: explained variance
+            theta_init: initial theta
+            jac: gradient
     '''
 
     theta_init = theta
 
     if bnds:
-        if grad:
+        if options['is_grad']:
             res = minimize(fobj, theta_init, args=data, method='L-BFGS-B', jac=True, bounds=bnds, options={'disp':DISP, 'maxiter':MAX_ITER})
         else:
             res = minimize(fobj, theta_init, args=data, method='L-BFGS-B',bounds=bnds, options={'disp':DISP, 'maxiter':MAX_ITER})
     else:
         # optimization
-        if grad:
+        if options['is_grad']:
             res = minimize(fobj, theta_init, args=data, method='L-BFGS-B', jac=True, options={'disp':DISP, 'maxiter':MAX_ITER})
         else:
             res = minimize(fobj, theta_init, args=data, method='L-BFGS-B', options={'disp':DISP, 'maxiter':MAX_ITER})
 
 
-    # correlation
-    if pathway:
-        y_est = f(res.x, data[0], pathway=pathway)
-        cc = _stats.corrcoef(y_est, data[1])
-
+    model = options['model']
+    if model.lower() == 'lnks_mp':
+        y = data[1][1]
+        v, y_est = f(theta, data[0], options['pathway'])
     else:
-        y_est = f(res.x, data[0])
-        cc = _stats.corrcoef(y_est, data[1])
+        y = data[1]
+        y_est = f(theta, data[0], options['pathway'])
+
+    cc = _stats.corrcoef(y_est, y)
+    ev = _stats.variance_explained(y_est, y)
 
     # results
-    if grad:
+    if options['is_grad']:
         jac = res.jac
     else:
         jac = None
@@ -76,6 +91,7 @@ def optimize(fobj, f, theta, data, bnds=None, grad=False, pathway=None):
         "success": res.success,
         "fun": res.fun,
         "corrcoef": cc,
+        "evar": ev,
         "theta_init": theta_init,
         "jac": jac}
 
