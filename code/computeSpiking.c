@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define lenP 5000
+#define lenP 1000 //5000
 
 /*
  * SC1DF
@@ -906,23 +906,25 @@ double *getfeedbackfilter(double *theta) {
 
     double ptr1[2] = {0.0, 0.0};
     double ptr2[2] = {0.0, 0.0};
-    double ptr3[2] = {0.0, 0.0};
+//    double ptr3[2] = {0.0, 0.0};
     ptr1[0] = theta[3];
     ptr1[1] = theta[4];
     ptr2[0] = theta[5];
     ptr2[1] = theta[6];
-    ptr3[0] = theta[7];
-    ptr3[1] = theta[8];
-    double *fb, *fb1, *fb2, *fb3;
+//    ptr3[0] = theta[7];
+//    ptr3[1] = theta[8];
+//    double *fb, *fb1, *fb2, *fb3;
+    double *fb, *fb1, *fb2;
     int i;
 
     fb = createVector(lenP);
     fb1 = expfeedbackfilter(ptr1, lenP); 
     fb2 = expfeedbackfilter(ptr2, lenP); 
-    fb3 = expfeedbackfilter(ptr3, lenP); 
+//    fb3 = expfeedbackfilter(ptr3, lenP); 
 
     for (i=0; i<lenP; i++) {
-        fb[i] = (fb1[i] + fb2[i])/2 + fb3[i];
+//        fb[i] = (fb1[i] + fb2[i])/2 + fb3[i];
+        fb[i] = (fb1[i] + fb2[i])/2;
     }
 
     return fb;
