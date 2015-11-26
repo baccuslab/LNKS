@@ -16,6 +16,7 @@ from scipy.linalg import orth as _orth
 import kineticblocks as _kb
 import spikingblocks as _sb
 import objectivetools as _obj
+import time
 
 
 def LNKS(theta, stim, pathway=1):
@@ -93,7 +94,7 @@ def LNKS_f(theta, stim, pathway=1):
     return r
 
 
-def LNKS_fobj(theta, stim, y, pathway=1):
+def LNKS_fobj(theta, stim, y, options):
     '''
     LNKS model objective function for using only firing rate as output
     Returns objective value(J) and gradient(grad)
@@ -103,7 +104,9 @@ def LNKS_fobj(theta, stim, y, pathway=1):
         theta: model parameters
         stim: input data
         y: output data (fr)
-        pathway (int): LNK pathway (1 or 2)
+        options (dictionary):
+            pathway: LNK pathway (1 or 2)
+            is_grad: bool (gradient on or off)
 
     Outputs
     -------
@@ -111,20 +114,25 @@ def LNKS_fobj(theta, stim, y, pathway=1):
         grad: gradient of objective
     '''
 
-    J = LNKS_fobj_helper(LNKS_f, theta, stim, y, pathway)
-    grad = _obj.fobj_numel_grad(LNKS_fobj_helper, LNKS_f, theta, stim, y, pathway)
+    J = LNKS_fobj_helper(LNKS_f, theta, stim, y, options)
 
-    return J, grad
+    if options['is_grad']:
+        grad = _obj.fobj_numel_grad(LNKS_fobj_helper, LNKS_f, theta, stim, y, options)
+
+        return J, grad
+
+    else:
+        return J
 
 
-def LNKS_fobj_helper(f, theta, stim, y, pathway=1):
+def LNKS_fobj_helper(f, theta, stim, y, options):
     '''
     LNKS model objective function helper function
 
     Weighted sum of log-likelihood and mean-square error
     '''
 
-    y_est = f(theta, stim, pathway)
+    y_est = f(theta, stim, options['pathway'])
 
     # linear combination of objective functions
     J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
@@ -143,7 +151,7 @@ def LNKS_MP_f(theta, stim, pathway=1):
     return v, r
 
 
-def LNKS_MP_fobj(theta, stim, y_data, pathway=1):
+def LNKS_MP_fobj(theta, stim, y_data, options):
     '''
     LNKS model objective function for using both membrane potential and firing rate
     Returns objective value(J) and gradient(grad)
@@ -153,7 +161,9 @@ def LNKS_MP_fobj(theta, stim, y_data, pathway=1):
         theta: model parameters
         stim: input data
         y_data: output data tuple (mp, fr)
-        pathway (int): LNK pathway (1 or 2)
+        options (dictionary):
+            pathway: LNK pathway (1 or 2)
+            is_grad: bool (gradient on or off)
 
     Outputs
     -------
@@ -161,13 +171,15 @@ def LNKS_MP_fobj(theta, stim, y_data, pathway=1):
         grad: gradient of objective
     '''
 
-    J = LNKS_MP_fobj_helper(LNKS_MP_f, theta, stim, y_data, pathway)
-    grad = _obj.fobj_numel_grad(LNKS_MP_fobj_helper, LNKS_MP_f, theta, stim, y_data, pathway)
+    J = LNKS_MP_fobj_helper(LNKS_MP_f, theta, stim, y_data, options)
+    if options['is_grad']:
+        grad = _obj.fobj_numel_grad(LNKS_MP_fobj_helper, LNKS_MP_f, theta, stim, y_data, options)
+        return J, grad
+    else:
+        return J
 
-    return J, grad
 
-
-def LNKS_MP_fobj_helper(f, theta, stim, y_data, pathway=1):
+def LNKS_MP_fobj_helper(f, theta, stim, y_data, options):
     '''
     LNKS model objective helper function for using both membrane potential and firing rate
     returns objective function value J
@@ -189,7 +201,7 @@ def LNKS_MP_fobj_helper(f, theta, stim, y_data, pathway=1):
     y_fr = y_data[1]
 
     # model output
-    y_mp_est, y_fr_est = f(theta, stim, pathway)
+    y_mp_est, y_fr_est = f(theta, stim, options['pathway'])
 
     # linear combination of objective functions
     J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=10000, weight_type="std")
@@ -400,7 +412,7 @@ def LNK_f(theta, stim, pathway=1):
     return v
 
 
-def LNK_fobj(theta, stim, y, pathway=1):
+def LNK_fobj(theta, stim, y, options):
     '''
     LNK model objective function
     Returns objective value(J) and gradient(grad)
@@ -410,7 +422,9 @@ def LNK_fobj(theta, stim, y, pathway=1):
         theta: model parameters
         stim: input data
         y: output data (mp)
-        pathway (int): LNK pathway (1 or 2)
+        options (dictionary):
+            pathway: LNK pathway (1 or 2)
+            is_grad: bool (gradient on or off)
 
     Outputs
     -------
@@ -418,20 +432,22 @@ def LNK_fobj(theta, stim, y, pathway=1):
         grad: gradient of objective
     '''
 
-    J = LNK_fobj_helper(LNK_f, theta, stim, y, pathway)
-    grad = _obj.fobj_numel_grad(LNK_fobj_helper, LNK_f, theta, stim, y, pathway)
+    J = LNK_fobj_helper(LNK_f, theta, stim, y, options)
+    if options['is_grad']:
+        grad = _obj.fobj_numel_grad(LNK_fobj_helper, LNK_f, theta, stim, y, options)
+        return J, grad
+    else:
+        return J
 
-    return J, grad
 
-
-def LNK_fobj_helper(LNK_f, theta, stim, y, pathway=1):
+def LNK_fobj_helper(LNK_f, theta, stim, y, options):
     '''
     LNK model objective function helper function
 
     Weighted sum of mean-square error
     '''
 
-    v = LNK_f(theta, stim, pathway)
+    v = LNK_f(theta, stim, options['pathway'])
 
     J = _obj.mse_weighted_loss(y, v, len_section=10000, weight_type="std")
 
@@ -549,7 +565,15 @@ def sigmoid(x):
         The sigmoidal output.
 
     '''
-    return 1 / (1 + _np.exp(-x))
+    isexcept = x < -500
+    if any(isexcept):
+        # exception: exp creating Runtimewarning (Inf)
+        y = _np.zeros(x.size)
+        idx = _np.where(~isexcept)
+        y[idx] = 1 / (1 + _np.exp(-x[idx]))
+        return y
+    else:
+        return 1 / (1 + _np.exp(-x))
 
 
 def LinearFilterBasis_15param():
@@ -586,7 +610,6 @@ def LinearFilterBasis_8param():
     return basis[:500,7:]
 
 
-import time
 def main():
     stim = _np.random.rand(300000)
     theta = _np.random.rand(16)
