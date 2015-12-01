@@ -498,7 +498,7 @@ def W_bnds():
     '''
     Return boundaries for W weights for two pathway LNK model
     '''
-    bnds = tuple([(0,1),(0,1)])
+    bnds = tuple([(0,1)])
 
     return bnds
 
