@@ -119,25 +119,29 @@ class Cell:
         self._filtering_avg(options['fc'], options['filt_len'], options['num_rep'], options['apbflag'])
         self._set_contrast()
 
-    def LNKS(self, param):
+    def LNKS(self):
         '''
         Computes LNKS model of the cell
         '''
+
+        if self.result and 'theta' in self.result:
+            param = self.result['theta']
+        else:
+            raise NameError('result is not defined. load result using loadresult method.')
+
+        pathway = get_pathway(param)
+        w = get_weights(param)
 
         st = self.stim
         st = normalize_stim(st)
 
         mp = self.mp
-        mp = mp - _np.min(mp[20000:])
-        mp = mp / _np.max(mp[20000:])
+        mp = normalize_0_1(mp)
 
         fr = self.fr
         fr = fr / _np.max(fr)
 
-        f, g, u, thetaK, X, v, r = _lnks.LNKS(param, st)
-
-        v = v - _np.min(v[20000:])
-        v = v / _np.max(v[20000:])
+        f, g, u, thetaK, X, v, r = _lnks.LNKS(param, st, pathway)
 
         self.LNKS_est = {
             'f': f,
@@ -149,22 +153,30 @@ class Cell:
             'v_est': v,
             'r': fr,
             'r_est': r,
+            'w': w,
             }
 
 
-    def LNK(self, param):
+    def LNK(self):
         '''
         Computes LNK model of the cell
         '''
+
+        if self.result and 'theta' in self.result:
+            param = self.result['theta']
+        else:
+            raise NameError('result is not defined. load result using loadresult method.')
+
+        pathway = get_pathway(param)
+        w = get_weights(param)
 
         st = self.stim
         st = normalize_stim(st)
 
         mp = self.mp
-        mp = mp - _np.min(mp[20000:])
-        mp = mp / _np.max(mp[20000:])
+        mp = normalize_0_1(mp)
 
-        f, g, u, thetaK, X, v = _lnks.LNK(param, st)
+        f, g, u, thetaK, X, v = _lnks.LNK(param, st, pathway)
 
         self.LNK_est = {
             'f': f,
@@ -174,6 +186,7 @@ class Cell:
             'X': X,
             'v_est': v,
             'v': mp,
+            'w': w,
             }
 
 
@@ -212,6 +225,75 @@ class Cell:
         self.est = f(theta, mp)
 
         ### need to be implemented
+
+    def summary(self, model):
+        '''
+        display model fit summary
+
+        Input
+        -----
+        model (string): LNK, LNKS, Spiking
+        '''
+        def _get_nonlinearity_param(thetaN):
+            print("%45s" %("Nonlinearity Parameters"))
+            print("-"*70)
+            print("%16s" %(" a * (g(t) + thr)"))
+            print("%6.3f*(g(t)+%6.3f)" %(thetaN[1], thetaN[0]/thetaN[1]))
+            print("\n")
+
+        def _get_kinetics_ratio(thetaK):
+            print("%45s" %("Kinetics Parameters"))
+            print("-"*70)
+            print("%15s %10s %10s %10s %20s" %("ka1*u(t) + ka2", "kfi", "kfr", "ksi", "ksr1*u(t)+ksr2"))
+            print("%5.2fu(t)+%5.2f %10.2f %10.2f %10.2f %10.2fu(t)+%5.2f" %(thetaK[0], thetaK[6], thetaK[1], thetaK[2], thetaK[3], thetaK[4], thetaK[5]))
+            print("\n")
+            print("%10s %10s" %("kfi/ka", "kfr/ka"))
+            print("%10.3f %10.3f" %(thetaK[1]/thetaK[0], thetaK[2]/thetaK[0]))
+            print("="*70)
+            print("\n")
+
+        if model == 'LNKS' and self.result and self.LNKS_est:
+            param = self.result['theta']
+            pathway = get_pathway(param, model)
+
+            if pathway == 1:
+                _get_kinetics_ratio(self.LNKS_est['thetaK'])
+
+            elif pathway == 2:
+                print("%45s" %("On Pathway"))
+                _get_kinetics_ratio(self.LNKS_est['thetaK'][0])
+                print("%45s" %("Off Pathway"))
+                _get_kinetics_ratio(self.LNKS_est['thetaK'][1])
+                print("%45s" %("Weights"))
+                w = get_weights(param)
+                print("%10s %10s" %("w_on", "w_off"))
+                print("%10.3f %10.3f" %(w[0], w[1]))
+
+        elif model == 'LNK' and self.result and self.LNK_est:
+            param = self.result['theta']
+            pathway = get_pathway(param, model)
+
+            if pathway == 1:
+                thetaN = self.result['theta'][8:10]
+                _get_nonlinearity_param(thetaN)
+                _get_kinetics_ratio(self.LNK_est['thetaK'])
+
+            elif pathway == 2:
+                print("%45s" %("On Pathway"))
+                _get_kinetics_ratio(self.LNK_est['thetaK'][0])
+                print("%45s" %("Off Pathway"))
+                _get_kinetics_ratio(self.LNK_est['thetaK'][1])
+                print("%45s" %("Weights"))
+                w = get_weights(param)
+                print("%10s %10s" %("w_on", "w_off"))
+                print("%10.3f %10.3f" %(w[0], w[1]))
+
+        else:
+            raise NameError('%s_est is not defined. load result using loadresult method.' %(model))
+
+        s = None
+        return s
+
 
 
     def fit(self, fobj, f, theta, model, bnds=None, options=None):
@@ -576,6 +658,32 @@ class Cell:
         templ = _dpt.lowpassfilter(_np.real(temph), filt_len, num_rep)
         self.mp = _np.real(templ)
 
+def get_pathway(theta, model):
+    '''
+    return pathway
+    '''
+    if (model == 'LNKS' and theta.size == 43) or (model == 'LNK' and theta.size == 36):
+        pathway = 2
+    elif (model == 'LNKS' and theta.size == 24) or (model == 'LNK' and theta.size == 17):
+        pathway = 1
+    else:
+        raise ValueError('param size error')
+
+    return pathway
+
+def get_weights(theta, model):
+    '''
+    return weights
+    '''
+    if (model == 'LNKS' and theta.size == 43) or (model == 'LNK' and theta.size == 36):
+        w = [theta[17], theta[35]]
+    elif (model == 'LNKS' and theta.size == 24) or (model == 'LNK' and theta.size == 17):
+        w = None
+    else:
+        raise ValueError('param size error')
+
+    return w
+
 
 
 def get_data(cell, model, options=None):
@@ -593,8 +701,7 @@ def get_data(cell, model, options=None):
     '''
 
     st = normalize_stim(cell.stim)
-    mp = cell.mp - _np.min(cell.mp)
-    mp = mp / _np.max(mp)
+    mp = normalize_0_1(cell.mp)
     fr = cell.fr / _np.max(cell.fr)
 
     if options['crossval']:
