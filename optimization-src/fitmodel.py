@@ -23,6 +23,7 @@ import numpy as np
 import pickle
 import pdb
 import time
+import pandas as pd
 
 models = {
     "LNK": lnks.LNK_f,
@@ -128,36 +129,27 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     # get initials
     theta_init = get_initial(model, init_num)
 
-    # save results to these matrices
-    thetas = np.zeros([num_optims+1, theta_init.size])
-    funs_train = np.zeros(num_optims+1)
-    funs_test = np.zeros(num_optims+1)
-    ccs_train = np.zeros(num_optims+1)
-    ccs_test = np.zeros(num_optims+1)
-    evars_train = np.zeros(num_optims+1)
-    evars_test = np.zeros(num_optims+1)
-
     # compute initial objective value and correlation coefficient
-    thetas[0,:] = theta_init
-    funs_train[0], ccs_train[0], evars_train[0] = compute_func_values(cell,
-                                                                      theta_init,
-                                                                      model,
-                                                                      fobj, f,
-                                                                      options, True)
-    funs_test[0], ccs_test[0], evars_test[0] = compute_func_values(cell,
-                                                                   theta_init,
-                                                                   model, fobj,
-                                                                   f, options, False)
+    fun_train, cc_train, evar_train = compute_func_values(cell,theta_init,model,fobj, f,options, True)
+    fun_test, cc_test, evar_test = compute_func_values(cell,theta_init,model, fobj,f, options, False)
 
+    # Print if test mode
+    if num_optims < 100:
+        # Run Optimization
+        print("\nOptimize %s model using %s objective function\n" %(model, objective))
+        print("%30s %17s %17s %17s %17s %17s %17s" %("Optimization Process(%)","Update Time(sec)","funs",
+                                                "corrcoef(train)","var-expl(train)",
+                                                "corrcoef(test)", "var-expl(test)"))
+        print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %(0, 0, fun_train,cc_train,evar_train,cc_test,evar_test))
 
-    # Run Optimization
-    print("\nOptimize %s model using %s objective function\n" %(model, objective))
-    print("%30s %17s %17s %17s %17s %17s %17s" %("Optimization Process(%)","Update Time(sec)","funs",
-                                            "corrcoef(train)","var-expl(train)",
-                                            "corrcoef(test)", "var-expl(test)"))
-    print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %(0, 0, funs_train[0],
-                                        ccs_train[0],evars_train[0],
-                                        ccs_test[0],evars_test[0]))
+    # save results to Data Frame
+    idxs = np.array(range(num_optims+1))
+    cols = ["Optimization Process(%)","Update Time(sec)","funs","corrcoef(train)","var-expl(train)","corrcoef(test)","var-expl(test)"]
+    df = pd.DataFrame(index=idxs, columns=cols)
+    df.loc[0] = (0, 0, fun_train,cc_train,evar_train,cc_test,evar_test)
+
+    df_thetas = pd.DataFrame(index=idxs, columns=list(range(len(theta_init))))
+    df_thetas.loc[0] = theta_init
 
     for i in range(1, num_optims+1):
         t0 = time.time()
@@ -165,45 +157,39 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
         t1 = time.time()
 
         # train result
-        thetas[i,:], funs_train[i], ccs_train[i], evars_train[i] = get_results(cell)
+        theta, fun_train, cc_train, evar_train = get_results(cell)
         # test result
-        funs_test[i], ccs_test[i], evars_test[i] = compute_func_values(cell,
-                                                                       thetas[i,:],
-                                                                       model,
-                                                                       fobj, f,
-                                                                       options, False)
-        theta_init = thetas[i,:]
+        fun_test, cc_test, evar_test = compute_func_values(cell,theta,model,fobj,f,options,False)
+        theta_init = theta
 
-        print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %( (i/num_optims * 100),(t1-t0),funs_train[i],
-                                            ccs_train[i],evars_train[i],
-                                            ccs_test[i],evars_test[i]))
+        if num_optims < 100:
+            print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %( (i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test))
+
+        output = [(i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test]
+        df.loc[i] = output
+        df_thetas.loc[i] = theta
 
     print("\n")
-    save_results(cell, cell_num, thetas, funs_train, ccs_train, evars_train,
-                 funs_test, ccs_test, evars_test)
+    save_results(cell, cell_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
+    df.to_csv(cell_num+'.csv', sep='\t')
+    df_thetas.to_csv(cell_num+'_thetas.csv', sep='\t')
 
     return cell
 
 
-def save_results(cell, cell_num, thetas, funs_train, ccs_train, evars_train, funs_test, ccs_test,
-                 evars_test):
+def save_results(cell, cell_num, theta, fun_train, cc_train, evar_train, fun_test, cc_test, evar_test):
     '''
     Save optimization results
     '''
 
-    cell.result["thetas"] = thetas
-    cell.result["funs"] = funs_train
-    cell.result["corrcoefs"] = ccs_train
-    cell.result["evars"] = evars_train
-    cell.result["evar"] = evars_train[-1]
-    cell.result["fun_init"] = funs_train[0]
-    cell.result["corrcoef_init"] = ccs_train[0]
+    cell.result["theta"] = theta
+    cell.result["fun"] = fun_train
+    cell.result["corrcoef"] = cc_train
+    cell.result["evar"] = evar_train
 
-    cell.result["funs_test"] = funs_test
-    cell.result["corrcoefs_test"] = ccs_test
-    cell.result["corrcoef_test"] = ccs_test[-1]
-    cell.result["evars_test"] = evars_test
-    cell.result["evar_test"] = evars_test[-1]
+    cell.result["fun_test"] = fun_test
+    cell.result["corrcoef_test"] = cc_test
+    cell.result["evar_test"] = evar_test
 
     cell.saveresult(cell_num+'_results.pickle')
 
@@ -351,12 +337,12 @@ def print_results(cell):
     evar_test = np.max(cell.result['evar_test'])
     if np.isnan(evar_test) or (evar_test is None):
         evar_test = 0
-    fun_init = np.max(cell.result['fun_init'])
-    if np.isnan(fun_init) or (fun_init is None):
-        fun_init = 0
-    corrcoef_init = np.max(cell.result['corrcoef_init'])
-    if np.isnan(corrcoef_init) or (corrcoef_init is None):
-        corrcoef_init = 0
+    # fun_init = np.max(cell.result['fun_init'])
+    # if np.isnan(fun_init) or (fun_init is None):
+    #     fun_init = 0
+    # corrcoef_init = np.max(cell.result['corrcoef_init'])
+    # if np.isnan(corrcoef_init) or (corrcoef_init is None):
+    #     corrcoef_init = 0
 
     print("\n")
     print("cost function value: %12.4f" % fun)
@@ -364,8 +350,8 @@ def print_results(cell):
     print("explained variance train: %12.4f" % evar)
     print("correlation coefficient test: %12.4f" % corrcoef_test)
     print("explained variance test: %12.4f" % evar_test)
-    print("initial cost function value: %12.4f" % fun_init)
-    print("initial correlation coefficient: %12.4f" % corrcoef_init)
+    # print("initial cost function value: %12.4f" % fun_init)
+    # print("initial correlation coefficient: %12.4f" % corrcoef_init)
 
 
 '''
