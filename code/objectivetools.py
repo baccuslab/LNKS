@@ -13,127 +13,34 @@ created: 2015-02-26
 import numpy as _np
 import time
 
-def fobjective_numel(fobj, f, theta, data):
+
+def weighted_loss(loss_func, y, y_est, len_section=10000, weight_type="std"):
     '''
-    Objective function of any model and objective. Computes its numerical gradient.
-
-    Returns the cost value(J) and the gradient(grad).
-
-    Input
-    -----
-    fobj (function):
-        objective function
-    f (function):
-        model function
-    theta (ndarray)
-    data (tuple (ndarray,ndarray)):
-        The data (input, output) tuple.
-
-    Output
-    ------
-    J (double):
-        The cost value measured by the likelihood function at given theta and the input
-
-    grad (ndarray):
-        The gradient of the objective function
-    '''
-    J = fobj(f, theta, data[0], data[1])
-    grad = fobj_numel_grad(fobj, f, theta, data[0], data[1])
-
-    return J, grad
-
-
-def log_diff_fobj(f, theta, x_in, y):
-    '''
-    sum of weighted log-likelihood and mse
-    '''
-    J1 = log_fobj_weighted(f, theta, x_in, y)
-    J2 = diff_fobj(f, theta, x_in, y)
-
-    J = J1 + J2
-
-    return J
-
-
-def log_fobj(f, theta, x_in, y):
-    '''
-    Objective function of any model using log-likelihood(poisson_loss function)
-    Returns the cost value(J).
-
-    Input
-    -----
-    x_in (ndarray)
-    theta (ndarray)
-    y (ndarray):
-        The firing rate data.
-
-    Output
-    ------
-    J (double):
-        The cost value measured by the likelihood function at given theta and the input
-
-    grad (ndarray):
-        The gradient of the objective function
-    '''
-
-    y_est = f(theta, x_in)
-    J = poisson_loss(y, y_est)
-
-    return J
-
-
-
-def log_fobj_weighted(f, theta, x_in, y):
-    '''
-    Objective function of any model using log-likelihood weighted sum
+    Objective function of any model using any loss function
+    and weighted sum of its sections.
 
     Returns the cost value(J).
 
     Input
     -----
-    x_in (ndarray)
-    theta (ndarray)
-    y (ndarray): The firing rate data.
+    loss_func (function object): loss function with weight
+    y (ndarray): The data.
+    y_est (ndarray): The estimate.
+    len_section (int): length of one section
+    weight_type (string): type of weight ("std" or "mean")
 
     Output
     ------
     J (double):
-        The cost value measured by the likelihood function at given theta and the input
-
-    grad (ndarray):
-        The gradient of the objective function
+        The cost value measured by the loss function at given theta and the input
     '''
 
-    y_est = f(theta, x_in)
+    num_section = _np.int(_np.floor(y.size / len_section))
 
-    J = poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    y_list = [y[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
+    y_est_list = [y_est[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
 
-    return J
-
-
-def diff_fobj(f, theta, x_in, y):
-    '''
-    Objective function that computes the weighted sum of Residual Sum of Squares for different contrast sections.
-
-    Input
-    -----
-    x_in (ndarray)
-    theta (ndarray)
-    y (ndarray):
-        The firing rate data.
-
-    Output
-    ------
-    J (double):
-        The cost value measured by the likelihood function at given theta and the input
-
-    grad (ndarray):
-        The gradient of the objective function
-    '''
-    y_est = f(theta, x_in)
-
-    J = mse_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
-
+    J = _np.sum(_np.array([loss_func(y_list[i], y_est_list[i], weight_type) for i in range(num_section)]))
     return J
 
 
@@ -154,17 +61,23 @@ def mse_weighted_loss(y, y_est, len_section=10000, weight_type="std"):
         J (double): objective value
     '''
 
-    num_section = _np.int(_np.floor(y.size / len_section))
+    J = weighted_loss(mse_loss_helper, y, y_est, len_section, weight_type)
 
-    y_list = [y[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
-    y_est_list = [y_est[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
+    return J
 
-    # weights
+
+def mse_loss_helper(y, y_est, weight_type="std"):
+    '''
+    Objective function using poisson_loss.
+
+    Returns weighted poisson loss cost value, where the weight depends on the weight_type.
+    '''
     if weight_type == "std":
-        J = _np.sum(_np.array([mse_loss(y_list[i], y_est_list[i])/((_np.std(y_list[i])+1e-6)**2) for i in range(len(y_list))]))
-
+        weight = _np.std(y) + 1e-6
     elif weight_type == "mean":
-        J = _np.sum(_np.array([mse_loss(y_list[i], y_est_list[i])/((_np.mean(y_list[i])+1e-3)**2) for i in range(len(y_list))]))
+        weight = _np.mean(y) + 1e-3
+
+    J = mse_loss(y, y_est) / (weight**2)
 
     return J
 
@@ -199,10 +112,10 @@ def poisson_weighted_loss(y, y_est, len_section=10000, weight_type="std"):
 
     Input
     -----
-    x_in (ndarray)
-    theta (ndarray)
-    y (ndarray):
-        The firing rate data.
+    y (ndarray): The data.
+    y_est (ndarray): The estimate.
+    len_section (int): length of one section
+    weight_type (string): type of weight ("std" or "mean")
 
     Output
     ------
@@ -210,18 +123,23 @@ def poisson_weighted_loss(y, y_est, len_section=10000, weight_type="std"):
         The cost value measured by the likelihood function at given theta and the input
     '''
 
-    num_section = _np.int(_np.floor(y.size / len_section))
+    J = weighted_loss(poisson_loss_helper, y, y_est, len_section, weight_type)
 
-    y_list = [y[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
-    y_est_list = [y_est[_np.arange(i*len_section, (i+1)*len_section)] for i in range(num_section)]
+    return J
 
-    # weights
+
+def poisson_loss_helper(y, y_est, weight_type="std"):
+    '''
+    Objective function using poisson_loss.
+
+    Returns weighted poisson loss cost value, where the weight depends on the weight_type.
+    '''
     if weight_type == "std":
-        weights = _np.array(list(map(_np.std, y_list))) + 1e-6
+        weight = _np.std(y) + 1e-6
     elif weight_type == "mean":
-        weights = _np.array(list(map(_np.mean, y_list))) + 1e-3
+        weight = _np.mean(y) + 1e-3
 
-    J = _np.sum(_np.array(list(map(poisson_loss, y_list, y_est_list))) / (weights**2))
+    J = poisson_loss(y, y_est) / (weight**2)
 
     return J
 
@@ -396,67 +314,6 @@ def grad_check_multi(f, theta, x_in, y, num_checks):
 
     print('Average relative error: %e' % (_np.mean(rel_error)))
     print('Average absolute error: %e' % (_np.mean(abs_error)))
-
-
-
-def logistic_fobj(theta, X, y):
-    '''
-    Return objective function value and its gradient of logistic function
-    using log-likelihood objective function and its gradient of logistic model.
-    Returns the cost value(J) and the gradient(grad).
-
-    Input
-    -----
-    X (ndarray)
-    theta (ndarray)
-    y (ndarray):
-        The output data.
-
-    Output
-    ------
-    J (double):
-        The cost value measured by the likelihood function at given theta and the input
-
-    grad (ndarray):
-        The gradient of the objective function
-    '''
-
-    y_est = sigmoid(theta.dot(X))
-
-    '''
-    likelihood objective function
-    '''
-    temp = _np.log(y_est)
-    temp[_np.isinf(temp)] = -1e-6
-    J = _np.sum(y_est - y*temp)
-
-    '''
-    gradient of the objective function
-    '''
-    e = y_est - y
-    w = _np.ones(y_est.shape) - y_est
-    grad = _np.sum(e * w * X,1)
-
-    return J, grad
-
-
-
-def sigmoid(x):
-    '''
-    Return applied sigmoidal function on the input signal.
-
-    Input
-    -----
-    x (ndarray):
-        The 1-by-n dimensional array.
-
-    Output
-    ------
-    y (ndarray):
-        The sigmoidal output.
-
-    '''
-    return 1 / (1 + _np.exp(-x))
 
 
 
