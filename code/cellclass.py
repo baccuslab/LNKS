@@ -658,6 +658,7 @@ class Cell:
         templ = _dpt.lowpassfilter(_np.real(temph), filt_len, num_rep)
         self.mp = _np.real(templ)
 
+
 def get_pathway(theta, model):
     '''
     return pathway

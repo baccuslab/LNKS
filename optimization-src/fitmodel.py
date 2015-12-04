@@ -81,7 +81,7 @@ def main():
     cell = fit(cell_num, model, objective, init_num, np.int(num_optims), options)
 
     # print results
-    print_results(cell)
+    print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_num_S, num_optims, crossval, is_grad)
 
 
 
@@ -136,7 +136,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     # Print if test mode
     if num_optims < 100:
         # Run Optimization
-        print("\nOptimize %s model using %s objective function\n" %(model, objective))
+        print("\nFit cell %s. Optimize %s model using %s objective function\n" %(cell_num, model, objective))
         print("%30s %17s %17s %17s %17s %17s %17s" %("Optimization Process(%)","Update Time(sec)","funs",
                                                 "corrcoef(train)","var-expl(train)",
                                                 "corrcoef(test)", "var-expl(test)"))
@@ -310,7 +310,7 @@ def get_initial_helper(filename):
     return theta_init
 
 
-def print_results(cell):
+def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_num_S, num_optims, crossval, is_grad):
     '''
     Print the final optimization results that will be used to create 3x results
 
@@ -344,12 +344,25 @@ def print_results(cell):
     # if np.isnan(corrcoef_init) or (corrcoef_init is None):
     #     corrcoef_init = 0
 
+    print("\nFit cell %s."  %(cell_num))
+    print(" Optimize %s model using %s objective function\n" %(model, objective))
+    print(" Optimization options")
+    print("\t Cell: %s" %(cell_num))
+    print("\t Model: %s" %(model))
+    print("\t Objective: %s" %(objective))
+    print("\t Initials LNK: %s" %(init_num_LNK))
+    print("\t Initials S: %s" %(init_num_S))
+    print("\t Pathway: %s" %(pathway))
+    print("\t Number of iterations: %s" %(num_optims))
+    print("\t Cross-validation: %s" %(crossval))
+    print("\t Gradient: %s" %(is_grad))
     print("\n")
-    print("cost function value: %12.4f" % fun)
-    print("correlation coefficient train: %12.4f" % corrcoef)
-    print("explained variance train: %12.4f" % evar)
-    print("correlation coefficient test: %12.4f" % corrcoef_test)
-    print("explained variance test: %12.4f" % evar_test)
+    print(" Optimization results")
+    print("\t cost function value: %12.4f" % fun)
+    print("\t correlation coefficient train: %12.4f" % corrcoef)
+    print("\t explained variance train: %12.4f" % evar)
+    print("\t correlation coefficient test: %12.4f" % corrcoef_test)
+    print("\t explained variance test: %12.4f" % evar_test)
     # print("initial cost function value: %12.4f" % fun_init)
     # print("initial correlation coefficient: %12.4f" % corrcoef_init)
 
