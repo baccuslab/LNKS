@@ -2,7 +2,7 @@
 '''
 fitmodel.py
 
-This is a script developed for optimizing LNK model.
+This is a script developed for optimizing LNK, LNKS, and Spiking model.
 
 author: Bongsoo Suh
 created: 2015-03-10
