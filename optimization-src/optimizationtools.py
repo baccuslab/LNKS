@@ -75,7 +75,8 @@ def optimize(fobj, f, theta, data, bnds=None, options=None):
         v, y_est = f(theta, data[0], options['pathway'])
     else:
         y = data[1]
-        y_est = f(theta, data[0], options['pathway'])
+        # y_est = f(theta, data[0], options['pathway'])
+        y_est = f(theta, data[0], options)
 
     cc = _stats.corrcoef(y_est, y)
     ev = _stats.variance_explained(y_est, y)
