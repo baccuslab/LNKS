@@ -11,7 +11,8 @@ created: 2015-02-26
 '''
 
 import numpy as _np
-import time
+import time as _time
+import multiprocessing as _mult
 
 
 def weighted_loss(loss_func, y, y_est, len_section=10000, weight_type="std"):
@@ -172,13 +173,22 @@ def poisson_loss(y, y_est):
 
 def fobj_numel_grad(fobj, f, theta, x_in, y, options):
     '''
-    numerical gradient
-    :param fobj:
-    :param f:
-    :param theta:
-    :param x_in:
-    :param y:
-    :return:
+    Returns numerical gradient
+    Original version of the gradient using list comprehension.
+
+    Input
+    -----
+        fobj (function object): objective function
+        f (function object): model function
+        theta (ndarray): model parameter
+        x_in (ndarry): input data
+        y (ndarray): output data
+        options (dictionary):
+
+    Output
+    ------
+        grad (ndarray)
+
     '''
 
     h = 0.00001
@@ -193,6 +203,43 @@ def fobj_numel_grad(fobj, f, theta, x_in, y, options):
 
     return grad
 
+def numel_gradient(fobj, f, theta, x_in, y, J0, options):
+    '''
+    Returns numerical gradient
+    Uses multiprocessing python module for parallel computing using multiple threads of processes.
+
+    Input
+    -----
+        fobj (function object): objective function
+        f (function object): model function
+        theta (ndarray): model parameter
+        x_in (ndarry): input data
+        y (ndarray): output data
+        J0 (double): objective function value at point theta
+        options (dictionary):
+            model (string): models are ('LNK', 'LNKS', 'LNKS_MP')
+            pathway (int): LNK pathway (1 or 2)
+            is_grad (bool): bool (gradient on(True) or off(False))
+
+    Output
+    ------
+        grad (ndarray)
+
+    '''
+    J0s = [J0]*theta.size
+    h = 0.00001
+    thetas = perturbed_thetas(theta, h)
+    pool = _mult.Pool(processes=_mult.cpu_count())
+    results = [pool.apply_async(fobj, args=(f, thetas[j], x_in, y, options)) for j in range(theta.size)]
+    output = [p.get() for p in results]
+    pool.close()
+
+    Jhs = _np.array(output)
+    grad = (Jhs - J0s)/h
+
+    return grad
+
+
 def perturbed_thetas(theta, h):
     return [add(theta, h, i) for i in range(theta.size)]
 
@@ -200,120 +247,4 @@ def add(theta, h, i):
     temp = _np.zeros(theta.size)
     temp[i] = h
     return (theta + temp)
-
-def eval_numerical_gradient(f, theta, x_in, y):
-    """
-    a naive implementation of numerical gradient of f at theta
-
-    Input
-    -----
-        f (function):
-            The objective function that returns cost value J, and the analytic gradient g0.
-        theta (ndarray):
-            The point (numpy array) to evaluate the gradient at
-        x_in (ndarray):
-            The point (numpy array) to evaluate the gradient at
-        y (ndarray):
-            The real data
-
-    Output
-    ------
-        grad (ndarray):
-            The numerical gradient
-    """
-
-    J0, g0 = f(theta, x_in, y) # evaluate function value at original point
-    grad = _np.zeros(theta.shape)
-    h = 0.00001
-
-    # iterate over all indexes in theta
-    it = _np.nditer(theta, flags=['multi_index'], op_flags=['readwrite'])
-    while not it.finished:
-
-        # evaluate function at theta+h
-        i0 = it.multi_index
-        theta[i0] += h # increment by h
-        Jh, gh = f(theta, x_in, y) # evalute f(theta + h)
-        theta[i0] -= h # restore to previous value (very important!)
-
-        # compute the partial derivative
-        grad[i0] = (Jh - J0) / h # the slope
-        # print(i0, grad[i0], g0[i0])
-        it.iternext() # step to next dimension
-
-    return grad
-
-def grad_check_single(f, theta, x_in, y):
-    """
-    Check gradients at multiple points
-
-
-    Input
-    -----
-        f (function):
-            The objective function that returns cost value J, and the analytic gradient g0.
-        theta (ndarray):
-            The point (numpy array) to evaluate the gradient at
-        x_in (ndarray):
-            The point (numpy array) to evaluate the gradient at
-        y (ndarray):
-            The real data
-
-    Output
-    ------
-    rel_error (double):
-        relative error
-    abs_error (double):
-        absolute error
-    """
-    ng = eval_numerical_gradient(f, theta, x_in, y)
-    J, ag = f(theta, x_in, y)
-
-    rel_error = _np.abs(ng - ag) / (_np.abs(ng) + _np.abs(ag)) * 100
-    abs_error = _np.abs(ng - ag)
-
-    return rel_error, abs_error
-
-
-def grad_check_multi(f, theta, x_in, y, num_checks):
-    """
-    Check gradients at multiple points
-
-
-    Input
-    -----
-        f (function):
-            The objective function that returns cost value J, and the analytic gradient g0.
-        theta (ndarray):
-            The point (numpy array) to evaluate the gradient at
-        x_in (ndarray):
-            The point (numpy array) to evaluate the gradient at
-        y (ndarray):
-            The real data
-
-    Output
-    ------
-    """
-    thetas = _np.random.rand(theta.size, num_checks)
-    thetas = (thetas - 0.5) * 10
-    rel_error = _np.zeros(thetas.shape)
-    abs_error = _np.zeros(thetas.shape)
-
-    for i in range(num_checks):
-
-        theta = thetas[:,i]
-        rel_error[:,i], abs_error[:,i] = grad_check_single(f, theta, x_in, y)
-        # ng = eval_numerical_gradient(f, theta, x_in, y)
-        # J, ag = f(theta, x_in, y)
-
-        # print(J)
-
-        # rel_error = abs(grad_numerical - grad_analytic) / (abs(grad_numerical) + abs(grad_analytic))
-        # rel_error[:,i] = _np.abs(ng - ag) / (_np.abs(ng) + _np.abs(ag)) * 100
-        # abs_error[:,i] = _np.abs(ng - ag)
-
-    print('Average relative error: %e' % (_np.mean(rel_error)))
-    print('Average absolute error: %e' % (_np.mean(abs_error)))
-
-
 
