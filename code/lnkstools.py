@@ -16,8 +16,8 @@ from scipy.linalg import orth as _orth
 import kineticblocks as _kb
 import spikingblocks as _sb
 import objectivetools as _obj
-import time
-
+import time as _time
+import pdb as _pdb
 
 def LNKS(theta, stim, pathway=1):
     '''
@@ -623,9 +623,9 @@ def main():
     theta[20] = 0
     theta[21] = 100
 
-    start_time = time.time()
+    start_time = _time.time()
     f, g, u, K, X, v, r = LNKS(theta, stim)
-    print("--- %s seconds ---" % str(time.time() - start_time))
+    print("--- %s seconds ---" % str(_time.time() - start_time))
 
 
 if __name__ == '__main__':

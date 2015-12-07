@@ -19,6 +19,7 @@ import spikingblocks as sb
 import optimizationtools as ot
 import statstools as stats
 import lnkstools as lnks
+import fast_lnks_objective as lnks_t
 import numpy as np
 import pickle
 import pdb
@@ -26,16 +27,16 @@ import time
 import pandas as pd
 
 models = {
-    "LNK": lnks.LNK_f,
-    "LNKS": lnks.LNKS_f,
-    "LNKS_MP": lnks.LNKS_MP_f,
+    "LNK": lnks_t.LNKS,
+    "LNKS": lnks_t.LNKS,
+    "LNKS_MP": lnks_t.LNKS,
     "Spiking": sb.SC1DF_C,
     }
 
 objectives = {
-    "LNK": lnks.LNK_fobj,
-    "LNKS": lnks.LNKS_fobj,
-    "LNKS_MP": lnks.LNKS_MP_fobj,
+    "LNK": lnks_t.LNKS_fobj,
+    "LNKS": lnks_t.LNKS_fobj,
+    "LNKS_MP": lnks_t.LNKS_fobj,
     "Spiking": sb.SC1DF_fobj,
     }
 
@@ -133,23 +134,21 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     fun_train, cc_train, evar_train = compute_func_values(cell,theta_init,model,fobj, f,options, True)
     fun_test, cc_test, evar_test = compute_func_values(cell,theta_init,model, fobj,f, options, False)
 
-    # Print if test mode
-    if num_optims < 100:
-        # Run Optimization
-        print("\nFit cell %s. Optimize %s model using %s objective function\n" %(cell_num, model, objective))
-        print("%30s %17s %17s %17s %17s %17s %17s" %("Optimization Process(%)","Update Time(sec)","funs",
-                                                "corrcoef(train)","var-expl(train)",
-                                                "corrcoef(test)", "var-expl(test)"))
-        print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %(0, 0, fun_train,cc_train,evar_train,cc_test,evar_test))
+    # Run Optimization
+    print("\nFit cell %s. Optimize %s model using %s objective function\n" %(cell_num, model, objective))
+    print("%30s %17s %17s %17s %17s %17s %17s" %("Optimization Process(%)","Update Time(sec)","funs",
+                                            "corrcoef(train)","var-expl(train)",
+                                            "corrcoef(test)", "var-expl(test)"))
+    print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %(0, 0, fun_train,cc_train,evar_train,cc_test,evar_test))
 
     # save results to Data Frame
-    idxs = np.array(range(num_optims+1))
-    cols = ["Optimization Process(%)","Update Time(sec)","funs","corrcoef(train)","var-expl(train)","corrcoef(test)","var-expl(test)"]
-    df = pd.DataFrame(index=idxs, columns=cols)
-    df.loc[0] = (0, 0, fun_train,cc_train,evar_train,cc_test,evar_test)
+    # idxs = np.array(range(num_optims+1))
+    # cols = ["Optimization Process(%)","Update Time(sec)","funs","corrcoef(train)","var-expl(train)","corrcoef(test)","var-expl(test)"]
+    # df = pd.DataFrame(index=idxs, columns=cols)
+    # df.loc[0] = (0, 0, fun_train,cc_train,evar_train,cc_test,evar_test)
 
-    df_thetas = pd.DataFrame(index=idxs, columns=list(range(len(theta_init))))
-    df_thetas.loc[0] = theta_init
+    # df_thetas = pd.DataFrame(index=idxs, columns=list(range(len(theta_init))))
+    # df_thetas.loc[0] = theta_init
 
     for i in range(1, num_optims+1):
         t0 = time.time()
@@ -162,17 +161,16 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
         fun_test, cc_test, evar_test = compute_func_values(cell,theta,model,fobj,f,options,False)
         theta_init = theta
 
-        if num_optims < 100:
-            print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %( (i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test))
+        print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %( (i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test))
 
-        output = [(i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test]
-        df.loc[i] = output
-        df_thetas.loc[i] = theta
+        # output = [(i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test]
+        # df.loc[i] = output
+        # df_thetas.loc[i] = theta
 
     print("\n")
     save_results(cell, cell_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
-    df.to_csv(cell_num+'.csv', sep='\t')
-    df_thetas.to_csv(cell_num+'_thetas.csv', sep='\t')
+    # df.to_csv(cell_num+'.csv', sep='\t')
+    # df_thetas.to_csv(cell_num+'_thetas.csv', sep='\t')
 
     return cell
 
@@ -240,14 +238,19 @@ def compute_func_values(cell, theta, model, fobj, f, options, istrain):
                 temp_options[key] = options[key]
         data = ccls.get_data(cell, model, temp_options)
 
-    fun = fobj(theta, data[0], data[1], options)
+    options['basis'] = lnks.LinearFilterBasis_8param()
+    options['stim'] = data[0] - np.mean(data[0])
+    if options['is_grad']:
+        fun, grad = fobj(theta, data[0], data[1], options)
+    else:
+        fun = fobj(theta, data[0], data[1], options)
 
     if model.lower() == 'lnks_mp':
         y = data[1][1]
-        v, y_est = f(theta, data[0], options['pathway'])
+        v, y_est = f(theta, data[0], options)
     else:
         y = data[1]
-        y_est = f(theta, data[0], options['pathway'])
+        y_est = f(theta, data[0], options)
 
     if istrain:
         cc = stats.corrcoef(y, y_est)

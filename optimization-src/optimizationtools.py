@@ -5,6 +5,8 @@ Tools for optimizing LNKS, LNK, Spiking models
 
 author: Bongsoo Suh
 created: 2015-02-26
+updated: 2015-12-04
+    - using model and objective in fast_lnks_objective
 
 (C) 2015 bongsoos
 '''
@@ -76,7 +78,7 @@ def optimize(fobj, f, theta, data, bnds=None, options=None):
     else:
         y = data[1]
         # y_est = f(theta, data[0], options['pathway'])
-        y_est = f(theta, data[0], options)
+        y_est = f(theta, data[0], options) # fast_lnks_objective
 
     cc = _stats.corrcoef(y_est, y)
     ev = _stats.variance_explained(y_est, y)
