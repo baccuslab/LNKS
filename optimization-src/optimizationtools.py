@@ -74,7 +74,8 @@ def optimize(fobj, f, theta, data, bnds=None, options=None):
     model = options['model']
     if model.lower() == 'lnks_mp':
         y = data[1][1]
-        v, y_est = f(theta, data[0], options['pathway'])
+        # v, y_est = f(theta, data[0], options['pathway'])
+        v, y_est = f(theta, data[0], options) # fast_lnks_objective
     else:
         y = data[1]
         # y_est = f(theta, data[0], options['pathway'])
