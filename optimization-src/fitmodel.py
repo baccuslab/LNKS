@@ -129,17 +129,19 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
 
     # get initials
     theta_init = get_initial(model, init_num)
+    thetas = np.array(np.zeros([num_optims+1, theta_init.size]))
+    thetas[0,:] = theta_init
 
     # compute initial objective value and correlation coefficient
     fun_train, cc_train, evar_train = compute_func_values(cell,theta_init,model,fobj, f,options, True)
     fun_test, cc_test, evar_test = compute_func_values(cell,theta_init,model, fobj,f, options, False)
 
     # Run Optimization
-    print("\nFit cell %s. Optimize %s model using %s objective function\n" %(cell_num, model, objective))
-    print("%30s %17s %17s %17s %17s %17s %17s" %("Optimization Process(%)","Update Time(sec)","funs",
+    # print("\nFit cell %s. Optimize %s model using %s objective function\n" %(cell_num, model, objective))
+    print("%15s %17s %17s %17s %17s %17s %17s" %("Process(%)","Update-Time(sec)","funs",
                                             "corrcoef(train)","var-expl(train)",
                                             "corrcoef(test)", "var-expl(test)"))
-    print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %(0, 0, fun_train,cc_train,evar_train,cc_test,evar_test))
+    print("%15.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %(0, 0, fun_train,cc_train,evar_train,cc_test,evar_test))
 
     # save results to Data Frame
     # idxs = np.array(range(num_optims+1))
@@ -157,11 +159,12 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
 
         # train result
         theta, fun_train, cc_train, evar_train = get_results(cell)
+        thetas[i,:] = theta
         # test result
         fun_test, cc_test, evar_test = compute_func_values(cell,theta,model,fobj,f,options,False)
         theta_init = theta
 
-        print("%30.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %( (i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test))
+        print("%15.2f %17.2f %17.5f %17.5f %17.5f %17.5f %17.5f" %( (i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test))
 
         # output = [(i/num_optims * 100),(t1-t0),fun_train,cc_train,evar_train,cc_test,evar_test]
         # df.loc[i] = output
@@ -169,6 +172,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
 
     print("\n")
     save_results(cell, cell_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
+    np.savetxt(cell_num+'_theta.csv', thetas, delimiter=",")
     # df.to_csv(cell_num+'.csv', sep='\t')
     # df_thetas.to_csv(cell_num+'_thetas.csv', sep='\t')
 
@@ -347,27 +351,27 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
     # if np.isnan(corrcoef_init) or (corrcoef_init is None):
     #     corrcoef_init = 0
 
-    print("\nFit cell %s."  %(cell_num))
-    print(" Optimize %s model using %s objective function\n" %(model, objective))
-    print(" Optimization options")
-    print("\t Cell: %s" %(cell_num))
-    print("\t Model: %s" %(model))
-    print("\t Objective: %s" %(objective))
-    print("\t Initials LNK: %s" %(init_num_LNK))
-    print("\t Initials S: %s" %(init_num_S))
-    print("\t Pathway: %s" %(pathway))
-    print("\t Number of iterations: %s" %(num_optims))
-    print("\t Cross-validation: %s" %(crossval))
-    print("\t Gradient: %s" %(is_grad))
-    print("\n")
-    print(" Optimization results")
-    print("\t cost function value: %12.4f" % fun)
-    print("\t correlation coefficient train: %12.4f" % corrcoef)
-    print("\t explained variance train: %12.4f" % evar)
-    print("\t correlation coefficient test: %12.4f" % corrcoef_test)
-    print("\t explained variance test: %12.4f" % evar_test)
-    # print("initial cost function value: %12.4f" % fun_init)
-    # print("initial correlation coefficient: %12.4f" % corrcoef_init)
+    fobject = open('result.txt', 'w')
+    fobject.write("\nFit cell " + cell_num + "\n")
+    fobject.write(" Optimize " + model + " model using " + objective + " objective function\n" + "\n")
+    fobject.write(" Optimization options" + "\n")
+    fobject.write("\t Cell: " + cell_num + "\n")
+    fobject.write("\t Model: " + model + "\n")
+    fobject.write("\t Objective: " + objective + "\n")
+    fobject.write("\t Initials LNK: " + init_num_LNK + "\n")
+    fobject.write("\t Initials S: " + init_num_S + "\n")
+    fobject.write("\t Pathway: " + str(pathway) + "\n")
+    fobject.write("\t Number of iterations: " + str(num_optims) + "\n")
+    fobject.write("\t Cross-validation: " + str(crossval) + "\n")
+    fobject.write("\t Gradient: " + str(is_grad) + "\n")
+    fobject.write("\n")
+    fobject.write(" Optimization results" + "\n")
+    fobject.write("\t cost function value: " + str(fun) + "\n")
+    fobject.write("\t correlation coefficient train: " + str(corrcoef) + "\n")
+    fobject.write("\t explained variance train: " + str(evar) + "\n")
+    fobject.write("\t correlation coefficient test: " + str(corrcoef_test) + "\n")
+    fobject.write("\t explained variance test: " + str(evar_test) + "\n")
+    fobject.close()
 
 
 '''
