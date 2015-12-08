@@ -315,7 +315,7 @@ def SC1DF_C(theta, x_in, options=None):
 '''
     Spiking Continuous 1-D Feedback(SC1DF) objective functions, gradient, gain
 '''
-def SC1DF_fobj(theta, x_in, y, options=None):
+def SC1DF_fobj(theta, x_in, y, options):
     '''
     Objective function and its gradient
     Likelihood objective function and its gradient of Spiking Continuous(SC) spiking model.
@@ -338,13 +338,13 @@ def SC1DF_fobj(theta, x_in, y, options=None):
         The gradient of the objective function
     '''
 
-    J = SC1DF_fobj_helper(SC1DF_C, theta, x_in, y, options)
+    J0 = SC1DF_fobj_helper(SC1DF_C, theta, x_in, y, options)
 
     if options['is_grad']:
-        grad = _obj.fobj_numel_grad(SC1DF_fobj_helper, SC1DF_C, theta, x_in, y, options)
-        return J, grad
+        grad = _obj.numel_gradient(SC1DF_fobj_helper, SC1DF_C, theta, x_in, y, J0, options)
+        return J0, grad
     else:
-        return J
+        return J0
 
 
 def SC1DF_fobj_helper(f, theta, stim, y, options):
