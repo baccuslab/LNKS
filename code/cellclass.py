@@ -129,8 +129,8 @@ class Cell:
         else:
             raise NameError('result is not defined. load result using loadresult method.')
 
-        pathway = get_pathway(param)
-        w = get_weights(param)
+        pathway = get_pathway(param, 'LNKS')
+        w = get_weights(param, 'LNKS')
 
         st = self.stim
         st = normalize_stim(st)
@@ -167,8 +167,8 @@ class Cell:
         else:
             raise NameError('result is not defined. load result using loadresult method.')
 
-        pathway = get_pathway(param)
-        w = get_weights(param)
+        pathway = get_pathway(param, 'LNK')
+        w = get_weights(param, 'LNK')
 
         st = self.stim
         st = normalize_stim(st)
@@ -265,7 +265,7 @@ class Cell:
                 print("%45s" %("Off Pathway"))
                 _get_kinetics_ratio(self.LNKS_est['thetaK'][1])
                 print("%45s" %("Weights"))
-                w = get_weights(param)
+                w = get_weights(param, model)
                 print("%10s %10s" %("w_on", "w_off"))
                 print("%10.3f %10.3f" %(w[0], w[1]))
 
@@ -284,7 +284,7 @@ class Cell:
                 print("%45s" %("Off Pathway"))
                 _get_kinetics_ratio(self.LNK_est['thetaK'][1])
                 print("%45s" %("Weights"))
-                w = get_weights(param)
+                w = get_weights(param, model)
                 print("%10s %10s" %("w_on", "w_off"))
                 print("%10.3f %10.3f" %(w[0], w[1]))
 
