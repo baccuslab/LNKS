@@ -171,15 +171,15 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
         # df_thetas.loc[i] = theta
 
     print("\n")
-    save_results(cell, cell_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
-    np.savetxt(cell_num+'_theta.csv', thetas, delimiter=",")
+    save_results(cell, cell_num, init_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
+    np.savetxt(cell_num+'_'+init_num[0]+'_theta.csv', thetas, delimiter=",")
     # df.to_csv(cell_num+'.csv', sep='\t')
     # df_thetas.to_csv(cell_num+'_thetas.csv', sep='\t')
 
     return cell
 
 
-def save_results(cell, cell_num, theta, fun_train, cc_train, evar_train, fun_test, cc_test, evar_test):
+def save_results(cell, cell_num, init_num, theta, fun_train, cc_train, evar_train, fun_test, cc_test, evar_test):
     '''
     Save optimization results
     '''
@@ -193,7 +193,7 @@ def save_results(cell, cell_num, theta, fun_train, cc_train, evar_train, fun_tes
     cell.result["corrcoef_test"] = cc_test
     cell.result["evar_test"] = evar_test
 
-    cell.saveresult(cell_num+'_results.pickle')
+    cell.saveresult(cell_num+'_'+init_num[0]+'_results.pickle')
 
     return
 
@@ -351,7 +351,7 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
     # if np.isnan(corrcoef_init) or (corrcoef_init is None):
     #     corrcoef_init = 0
 
-    fobject = open('result.txt', 'w')
+    fobject = open(cell_num+'_'+init_num_LNK+'_summary.txt', 'w')
     fobject.write("\nFit cell " + cell_num + "\n")
     fobject.write(" Optimize " + model + " model using " + objective + " objective function\n" + "\n")
     fobject.write(" Optimization options" + "\n")
