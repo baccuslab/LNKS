@@ -31,6 +31,7 @@ models = {
     "LNKS": lnks_t.LNKS,
     "LNKS_MP": lnks_t.LNKS,
     "Spiking": sb.SC1DF_C,
+    "Spiking_est": sb.SC1DF_C,
     }
 
 objectives = {
@@ -38,6 +39,7 @@ objectives = {
     "LNKS": lnks_t.LNKS_fobj,
     "LNKS_MP": lnks_t.LNKS_fobj,
     "Spiking": sb.SC1DF_fobj,
+    "Spiking_est": sb.SC1DF_fobj,
     }
 
 bounds = {
@@ -45,6 +47,7 @@ bounds = {
     "LNKS": lnks.LNKS_bnds,
     "LNKS_MP": lnks.LNKS_bnds,
     "Spiking": sb.SC1DF_bnds,
+    "Spiking_est": sb.SC1DF_bnds,
     }
 
 # Set Initial Path
