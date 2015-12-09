@@ -132,12 +132,18 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
 
     # get initials
     theta_init = get_initial(model, init_num)
+
+    # For the case of Spiking_est model(using LNK output as an input to Spiking model)
+    # need to compute v_est in advance and put it in to the cell class.
     if model.lower() == 'spiking_est':
         theta_init_LNK = theta_init[0]
 
+        crossval = options['crossval']
+        options['crossval'] = False
         data = ccls.get_data(cell, 'LNK', options)
         cell.v_est = lnks.LNK_f(theta_init_LNK, data[0], options['pathway'])
 
+        options['crossval'] = crossval
         theta_init = theta_init[1]
 
     thetas = np.array(np.zeros([num_optims+1, theta_init.size]))
