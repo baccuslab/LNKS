@@ -129,6 +129,14 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
 
     # get initials
     theta_init = get_initial(model, init_num)
+    if model.lower() == 'spiking_est':
+        theta_init_LNK = theta_init[0]
+
+        data = ccls.get_data(cell, 'LNK', options)
+        cell.v_est = lnks.LNK_f(theta_init_LNK, data[0], options['pathway'])
+
+        theta_init = theta_init[1]
+
     thetas = np.array(np.zeros([num_optims+1, theta_init.size]))
     thetas[0,:] = theta_init
 
@@ -298,6 +306,17 @@ def get_initial(model, init_num):
         # S initials
         filename = PATH_INITIAL_S + init_num[1] + '.initial'
         theta_init = get_initial_helper(filename)
+
+    elif model.lower() == "spiking_est":
+        # LNK initials
+        filename = PATH_INITIAL_LNK + init_num[0] + '.initial'
+        theta_init_LNK = get_initial_helper(filename)
+
+        # S initials
+        filename = PATH_INITIAL_S + init_num[1] + '.initial'
+        theta_init_S = get_initial_helper(filename)
+
+        theta_init = (theta_init_LNK, theta_init_S)
 
     else:
         raise ValueError('The model name is not appropriate.')

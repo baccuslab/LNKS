@@ -334,7 +334,7 @@ class Cell:
 
             self.est = f(theta, data[0])
 
-        elif model.lower() == "lnk_est":
+        elif model.lower() == "spiking_est":
             '''
             Predicting Spiking model from the LNK model estimate.
             '''
@@ -687,7 +687,7 @@ def get_weights(theta, model):
 
 
 
-def get_data(cell, model, options=None):
+def get_data(cell, model, options):
     '''
     get data tuple for model optimization
 
@@ -739,7 +739,7 @@ def get_data(cell, model, options=None):
         '''
         data = (st_train, mp_train, options)
 
-    elif model.lower() == "lnk_est":
+    elif model.lower() == "spiking_est":
         '''
         Fitting Spiking model to the firing rate using the LNK model estimate.
         '''
