@@ -188,15 +188,18 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
         # df_thetas.loc[i] = theta
 
     print("\n")
-    save_results(cell, cell_num, init_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
-    np.savetxt(cell_num+'_'+init_num[0]+'_theta.csv', thetas, delimiter=",")
+    save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
+    if model.lower in ['Spiking','Spiking_est']:
+        np.savetxt(cell_num+'_'+init_num[1]+'_theta.csv', thetas, delimiter=",")
+    else:
+        np.savetxt(cell_num+'_'+init_num[0]+'_theta.csv', thetas, delimiter=",")
     # df.to_csv(cell_num+'.csv', sep='\t')
     # df_thetas.to_csv(cell_num+'_thetas.csv', sep='\t')
 
     return cell
 
 
-def save_results(cell, cell_num, init_num, theta, fun_train, cc_train, evar_train, fun_test, cc_test, evar_test):
+def save_results(cell, cell_num, init_num, model, theta, fun_train, cc_train, evar_train, fun_test, cc_test, evar_test):
     '''
     Save optimization results
     '''
@@ -210,7 +213,10 @@ def save_results(cell, cell_num, init_num, theta, fun_train, cc_train, evar_trai
     cell.result["corrcoef_test"] = cc_test
     cell.result["evar_test"] = evar_test
 
-    cell.saveresult(cell_num+'_'+init_num[0]+'_results.pickle')
+    if model.lower in ['Spiking','Spiking_est']:
+        cell.saveresult(cell_num+'_'+init_num[1]+'_results.pickle')
+    else:
+        cell.saveresult(cell_num+'_'+init_num[0]+'_results.pickle')
 
     return
 
