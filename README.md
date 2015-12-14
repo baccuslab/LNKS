@@ -17,3 +17,6 @@ Add `LNKS/code` and `LNKS/optimization-src` directories path to the `PYTHONPATH`
 
 ## Tutorial
 Please see the <a href="https://github.com/baccuslab/LNKS/blob/master/examples/demo-cellclass.ipynb" target="_blank">example</a> of using `cellclass`.
+
+## Optimization
+Optimization instructions can be found in <a href="https://github.com/baccuslab/LNKS/tree/master/optimization-src" target="_blank">optimization-src</a> directory.
