@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# run program
+# usage: ./run-program
+#
+# Dependencies
+# ------------
+# get-servers
+# program
+# planner-server
+# planner-run
+#
+# Instructions
+# ------------
+#   - put options in the `program` file
+#   - select initials in the `planner-run` file
+#
+# updated: 12-15-15 
+#
+# (C) bongsoos 2015
+
+FILENAME="server-loads1.out"
+SERVERS=$(./planner-server "$FILENAME")
+
+echo "Running on servers: "
+echo $SERVERS
+
+./planner-run tempfile
+parallel --workdir . -S $SERVERS -a tempfile ./program
+rm -f tempfile
+

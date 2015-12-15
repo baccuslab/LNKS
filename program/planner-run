@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# plan optimization
+# usage: ./planner-run FILENAME
+# take the filename into FILENAME and save all combinations of runs into FILENAME
+#
+# (C) bongsoos 2015
+
+FILENAME=$1
+
+cells=(g4 g6 g8 g9 g9apb g11 g12 g13 g15 g17 g17apb g19 g19apb g20 g20apb)
+cells=(g9apb g11 g17apb g19apb g20apb)
+cells=(g9apb g11)
+init_num_LNK=(g9apb g11)
+init_num_S=(g20)
+
+parallel echo ::: ${cells[@]} ::: ${init_num_LNK[@]} ::: ${init_num_S[@]} > $FILENAME
+
