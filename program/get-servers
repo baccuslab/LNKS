@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# get-servers
+# -----------
+# get all the avilable servers in a sorted order based on the average load.
+# the result is saved into `server-loads.out`, and the output of the `get-server` will be 
+# saved into `server-loads1.out` which will be used in the `planner-server`
+# usage: ./get-server
+#
+# author: Bongsoo Suh
+# created: 2015-03-19
+#
+# (C) 2015 bongoos
+
+FILENAME="server-loads.out"
+touch $FILENAME
+CURR_HOST=$(hostname)
+SERVER_NAME="corn"
+HOST_NAME=".stanford.edu"
+COMMA=","
+MYHOSTS="{"
+START_PAREN="{"
+END_PAREN="}"
+END_HOST=40
+
+ARRAY=()
+SPACE=" "
+LOADS=()
+
+for i in {03..40}
+do
+    COUNT=1
+    HOST=$SERVER_NAME$i$HOST_NAME
+
+    if [ "$HOST" != "$CURR_HOST" ]; then
+        count=$(ping -c $COUNT $HOST | grep 'received' | awk -F',' '{ print $2 }' | awk '{ print $1 }')
+
+        if [ $? -eq 0 ] && [ $count -gt 0 ]; then
+
+            if SERVER_LOAD=$(ssh $SERVER_NAME$i$HOST_NAME -q cat /proc/loadavg); then
+
+                LOAD1=$(echo $SERVER_LOAD | awk '{print $1}')
+                LOAD2=$(echo $SERVER_LOAD | awk '{print $2}')
+                LOAD3=$(echo $SERVER_LOAD | awk '{print $3}')
+
+                LOAD_SUM=$(awk "BEGIN {print ($LOAD1+$LOAD2+$LOAD3)/3; exit}")
+
+                #echo " Host: $HOST is up at $(date). SERVER LOAD: $SERVER_LOAD Average LOAD: $LOAD_SUM"
+                echo $HOST $i $SERVER_LOAD $LOAD_SUM
+
+                if [ $i -lt 40 ]; then
+                    MYHOSTS=$MYHOSTS$i$COMMA
+                    ARRAY=$ARRAY$i$SPACE
+                    LOADS=$LOADS$LOAD_SUM$SPACE
+                fi
+
+                if [ $i -eq 40 ]; then
+                    MYHOSTS=$MYHOSTS$i$END_PAREN
+                    ARRAY=$ARRAY$i
+                    LOADS=$LOADS$LOAD_SUM
+                fi
+            fi
+        fi
+
+    fi
+done > $FILENAME
+
+sort -k8 -n $FILENAME | awk '{print $1 "      " $8}' > server-loads1.out
+cat server-loads1.out
+
