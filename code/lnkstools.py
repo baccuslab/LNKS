@@ -61,12 +61,12 @@ def LNKS(theta, stim, pathway=1):
 
     if pathway == 1:
         # compute LNK model
-        f, g, u, thetaK, X, v = LNK(theta[:17], stim, pathway)
+        f, g, u, thetaK, X, v = LNK(theta[:18], stim, pathway)
 
         # Comptue Spiking model
         # Running fast c-extension
         # To get the internal variables of the spiking block, use Spiking method.
-        r = _sb.SC1DF_C(theta[17:], v)
+        r = _sb.SC1DF_C(theta[18:], v)
 
     elif pathway == 2:
         # compute LNK model
@@ -241,7 +241,7 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
     elif bnd_mode == 1:
         bnd_LNK = LNK_bnds(pathway)
         if pathway == 1:
-            bnd_S = tuple([(theta[i],theta[i]) for i in range(17,theta.size)])
+            bnd_S = tuple([(theta[i],theta[i]) for i in range(18,theta.size)])
         elif pathway == 2:
             bnd_S = tuple([(theta[i],theta[i]) for i in range(36,theta.size)])
         else:
@@ -251,7 +251,7 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
 
     elif bnd_mode == 2:
         if pathway == 1:
-            bnd_LNK = tuple([(theta[i],theta[i]) for i in range(17)])
+            bnd_LNK = tuple([(theta[i],theta[i]) for i in range(18)])
         elif pathway == 2:
             bnd_LNK = tuple([(theta[i],theta[i]) for i in range(36)])
         else:
@@ -306,7 +306,8 @@ def LNK(theta, stim, pathway=1):
 
     # one pathway
     if pathway == 1:
-        f, g, u, thetaK, X, v = LNK_single_path(theta, nzstim, lenStim, basis, numBasis)
+        f, g, u, thetaK, X, v_temp = LNK_single_path(theta[:17], nzstim, lenStim, basis, numBasis)
+        v = theta[17] * v_temp
 
     # two pathway
     elif pathway == 2:
@@ -336,6 +337,7 @@ def LNK(theta, stim, pathway=1):
     else:
         raise ValueError('The pathway parameter should be 1 or 2')
 
+    v = v - _np.mean(v)
 
     return f, g, u, thetaK, X, v
 
@@ -397,8 +399,8 @@ def LNK_single_path(theta, nzstim, lenStim, basis, numBasis):
     X = Kinetics(thetaK, X0, u)
     v = X[1,:]
 
-    v = v - _np.min(v)
-    v = v / _np.max(v)
+    # v = v - _np.min(v)
+    # v = v / _np.max(v)
 
     return f, g, u, thetaK, X, v
 
@@ -460,7 +462,7 @@ def LNK_bnds(pathway=1):
     '''
 
     if pathway == 1:
-        bnds = L_bnds() + N_bnds() + K_bnds()
+        bnds = L_bnds() + N_bnds() + K_bnds() + W_bnds()
 
     elif pathway == 2:
         bnds = (L_bnds() + N_bnds() + K_bnds() + W_bnds()) * 2
@@ -498,7 +500,7 @@ def W_bnds():
     '''
     Return boundaries for W weights for two pathway LNK model
     '''
-    bnds = tuple([(0,1)])
+    bnds = tuple([(0,None)])
 
     return bnds
 

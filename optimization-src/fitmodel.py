@@ -189,7 +189,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
 
     print("\n")
     save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
-    if model.lower in ['Spiking','Spiking_est']:
+    if model.lower() in ['Spiking','Spiking_est']:
         np.savetxt(cell_num+'_'+init_num[1]+'_theta.csv', thetas, delimiter=",")
     else:
         np.savetxt(cell_num+'_'+init_num[0]+'_theta.csv', thetas, delimiter=",")
@@ -199,7 +199,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     return cell
 
 
-def save_results(cell, cell_num, init_num, model, theta, fun_train, cc_train, evar_train, fun_test, cc_test, evar_test):
+def save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, evar_train, fun_test, cc_test, evar_test):
     '''
     Save optimization results
     '''
@@ -213,7 +213,7 @@ def save_results(cell, cell_num, init_num, model, theta, fun_train, cc_train, ev
     cell.result["corrcoef_test"] = cc_test
     cell.result["evar_test"] = evar_test
 
-    if model.lower in ['Spiking','Spiking_est']:
+    if model.lower() in ['Spiking','Spiking_est']:
         cell.saveresult(cell_num+'_'+init_num[1]+'_results.pickle')
     else:
         cell.saveresult(cell_num+'_'+init_num[0]+'_results.pickle')

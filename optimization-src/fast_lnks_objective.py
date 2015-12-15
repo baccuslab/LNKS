@@ -107,9 +107,9 @@ def LNKS(theta, stim, options):
     # one pathway
     if pathway == 1:
         thetas = [theta[:17]]
-        weights = [1]
+        weights = [theta[17]]
         if model in ['LNKS', 'LNKS_MP']:
-            theta_S = theta[17:]
+            theta_S = theta[18:]
 
     # two pathway
     elif pathway == 2:
@@ -138,11 +138,12 @@ def LNKS(theta, stim, options):
     X0 = _np.array([0.1,0.2,0.7,99]) # Initial Kinetics states
     X = [_kb.K4S_C(thetaK[i], X0, u[i]) for i in range(pathway)]
     v_temp = [X[i][1,:] for i in range(pathway)]
-    v_temp = [v_temp[i] - _np.min(v_temp[i]) for i in range(pathway)]
-    v_temp = [v_temp[i]/ _np.max(v_temp[i]) for i in range(pathway)]
+    # v_temp = [v_temp[i] - _np.min(v_temp[i]) for i in range(pathway)]
+    # v_temp = [v_temp[i]/ _np.max(v_temp[i]) for i in range(pathway)]
 
     # linear combination of pathway outputs
     output = sum([weights[i] * v_temp[i] for i in range(pathway)])
+    output = output - _np.mean(output)
 
     if model == 'LNKS':
         # Comptue Spiking model

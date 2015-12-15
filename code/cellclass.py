@@ -665,7 +665,7 @@ def get_pathway(theta, model):
     '''
     if (model == 'LNKS' and theta.size == 43) or (model == 'LNK' and theta.size == 36):
         pathway = 2
-    elif (model == 'LNKS' and theta.size == 24) or (model == 'LNK' and theta.size == 17):
+    elif (model == 'LNKS' and theta.size == 25) or (model == 'LNK' and theta.size == 18):
         pathway = 1
     else:
         raise ValueError('param size error')
@@ -678,8 +678,8 @@ def get_weights(theta, model):
     '''
     if (model == 'LNKS' and theta.size == 43) or (model == 'LNK' and theta.size == 36):
         w = [theta[17], theta[35]]
-    elif (model == 'LNKS' and theta.size == 24) or (model == 'LNK' and theta.size == 17):
-        w = None
+    elif (model == 'LNKS' and theta.size == 25) or (model == 'LNK' and theta.size == 18):
+        w = theta[17]
     else:
         raise ValueError('param size error')
 
@@ -702,7 +702,8 @@ def get_data(cell, model, options):
     '''
 
     st = normalize_stim(cell.stim)
-    mp = normalize_0_1(cell.mp)
+    mp = normalize_stim(cell.mp)
+    # mp = normalize_0_1(cell.mp)
     fr = cell.fr / _np.max(cell.fr)
 
     if options['crossval']:
