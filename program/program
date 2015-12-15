@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# program
+# -------
+# program that runs fitmodel.py 
+# usage: ./program CELL_NUM INIT_NUM_LNK INIT_NUM_S
+#
+# (C) bongsoos 2015
+#
+# fitmodel
+# --------
+# run using python3, module fitmodel.py
+#
+# usage: ./fitmodel.py $cell_num $model $objective $pathway $init_num_LNK $init_num_S $num_optims $crossval $is_grad
+# ex) $ ./fitmodel.py g9 LNK LNK 2 g9 g9 2 True False & 
+#
+# Options(env variables)
+# -------
+#    cell_num
+#    model
+#    objective
+#    pathway 
+#    init_num_LNK
+#    init_num_S
+#    num_optims
+#    crossval
+#    is_grad
+#
+# cell_num
+# --------
+# g4 g6 g8 g9 g9apb g11 g12 g13 g15 g17 g17apb g19 g19apb g20 g20apb
+#
+
+model=Spiking
+objective=Spiking
+num_optims=1
+pathway=1
+crossval=True
+is_grad=True
+
+function start_fit {
+    # start_fit 
+    # usage: start_fit $cell_num $init_num_LNK $init_num_S
+
+    nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad > $cell_num.$3.out
+}
+
+hostname
+#echo $1 $2 $3
+start_fit $1 $2 $3
