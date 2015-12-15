@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# planner-server
+# --------------
+# output all the servers from a input file
+# usage: ./planner-server INPUT_FILE
+#
+# (C) bongsoos 2015
+
+FILENAME=$1
+
+SERVERS_=$(cat $FILENAME | awk '{print $1}')
+index=1
+for s in $SERVERS_; do
+#    echo $index $s
+    SERVERS[$index]=$s
+    index=$((index+1))
+done
+
+function join {
+    local IFS="$1"
+    shift
+    echo "$*"
+}
+
+join , ${SERVERS[@]}
+
