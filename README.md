@@ -20,3 +20,6 @@ Please see the <a href="https://github.com/baccuslab/LNKS/blob/master/examples/d
 
 ## Optimization
 Optimization instructions can be found in <a href="https://github.com/baccuslab/LNKS/tree/master/optimization-src" target="_blank">optimization-src</a> directory.
+
+## Database
+Managing optimization results in `MySQL` database gives much more efficiency. Download the `MySQL` dmg file <a href="http://dev.mysql.com/downloads/mysql/" target="_blank">here</a>.
