@@ -385,7 +385,10 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
     # if np.isnan(corrcoef_init) or (corrcoef_init is None):
     #     corrcoef_init = 0
 
-    fobject = open(cell_num+'_'+init_num_LNK+'_summary.txt', 'w')
+    if model.lower() in ['spiking','spiking_est']:
+        fobject = open(cell_num+'_'+init_num_S+'_summary.txt', 'w')
+    else:
+        fobject = open(cell_num+'_'+init_num_LNK+'_summary.txt', 'w')
     fobject.write("\nFit cell " + cell_num + "\n")
     fobject.write(" Optimize " + model + " model using " + objective + " objective function\n" + "\n")
     fobject.write(" Optimization options" + "\n")
