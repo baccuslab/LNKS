@@ -94,7 +94,7 @@ def SG_fobj(theta, x_in, y):
 '''
     Spiking Continuous 1-D (SC1D) model (1-D approximation of higher order firing rate model).
 '''
-def SC1D(theta, x_in):
+def SC1D(theta, x_in, options):
     '''
     Spiking Continuous 1-D model.
     Compute the very basic continuous 1D nonlinearity(sigmoid) spiking block.
@@ -129,7 +129,7 @@ def SC1D(theta, x_in):
 '''
     Spiking Continuous 1-D (SC1D) objective functions, gradient, gain
 '''
-def SC1D_fobj(theta, x_in, y):
+def SC1D_fobj(theta, x_in, y, options):
     '''
     Objective function and its gradient
     Likelihood objective function and its gradient of Spiking Continuous(SC) spiking model.
@@ -152,33 +152,49 @@ def SC1D_fobj(theta, x_in, y):
         The gradient of the objective function
     '''
 
-    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SC1D, theta, (x_in, y))
 
-    if False:
-        dx_in = deriv(x_in, 0.001)
+    J0 = SC1DF_fobj_helper(SC1D, theta, x_in, y, options)
 
-        X = _np.zeros([3, x_in.size])
-        X[0,:] = _np.ones(x_in.size)
-        X[1,:] = x_in
-        X[2,:] = dx_in
+    if options['is_grad']:
+        grad = _obj.numel_gradient(SC1DF_fobj_helper, SC1D, theta, x_in, y, J0, options)
+        return J0, grad
+    else:
+        return J0
 
-        y_est = sigmoid(theta.dot(X))
+#
+#    J, grad = _obj.fobjective_numel(_obj.log_diff_fobj, SC1D, theta, (x_in, y))
+#
+#    if False:
+#        dx_in = deriv(x_in, 0.001)
+#
+#        X = _np.zeros([3, x_in.size])
+#        X[0,:] = _np.ones(x_in.size)
+#        X[1,:] = x_in
+#        X[2,:] = dx_in
+#
+#        y_est = sigmoid(theta.dot(X))
+#
+#        '''
+#        likelihood objective function
+#        '''
+#        temp = _np.log(y_est)
+#        temp[_np.isinf(temp)] = -1e-6
+#        J = _np.sum(y_est - y*temp)
+#
+#        '''
+#        gradient of the objective function
+#        '''
+#        e = y_est - y
+#        w = _np.ones(y_est.shape) - y_est
+#        grad = _np.sum(e * w * X,1)
+#
+#    return J, grad
 
-        '''
-        likelihood objective function
-        '''
-        temp = _np.log(y_est)
-        temp[_np.isinf(temp)] = -1e-6
-        J = _np.sum(y_est - y*temp)
-
-        '''
-        gradient of the objective function
-        '''
-        e = y_est - y
-        w = _np.ones(y_est.shape) - y_est
-        grad = _np.sum(e * w * X,1)
-
-    return J, grad
+def SC1D_bnds(pathway=None):
+    '''
+    return SC1D bound constraints.
+    '''
+    return ((None,None),(None,None),(None,None))
 
 def SC1D_1d(theta, x, dx):
     '''
