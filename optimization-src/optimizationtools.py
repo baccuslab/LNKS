@@ -19,7 +19,6 @@ import pdb
 
 # Optimization options
 DISP=False
-MAX_ITER=1
 
 
 def optimize(fobj, f, theta, data, bnds=None, options=None):
@@ -39,10 +38,12 @@ def optimize(fobj, f, theta, data, bnds=None, options=None):
         bnds (tuple of tuples or None):
             Boundaries of model parameters
         options (dictionary)
-            grad (Bool):
+            is_grad (Bool):
                 True if using gradient for optimization, else False
             pathway (int):
                 LNK model pathway (1, 2, otherwise None)
+            MAX_ITER (int):
+                number of iterations
 
     Output
     ------
@@ -57,6 +58,10 @@ def optimize(fobj, f, theta, data, bnds=None, options=None):
     '''
 
     theta_init = theta
+    if 'MAX_ITER' in options.keys():
+        MAX_ITER = options['MAX_ITER']
+    else:
+        MAX_ITER = 1000
 
     if bnds:
         if options['is_grad']:
