@@ -13,6 +13,8 @@ from peakdetect import peakdetect as _pd
 import dataprocesstools as _dpt
 import optimizationtools as _ot
 import lnkstools as _lnks
+import spikingblocks as _sb
+import spikingtools as _st
 import pickle
 import pdb
 
@@ -136,7 +138,7 @@ class Cell:
         st = normalize_stim(st)
 
         mp = self.mp
-        mp = normalize_0_1(mp)
+        mp = normalize_stim(mp)
 
         fr = self.fr
         fr = fr / _np.max(fr)
@@ -156,6 +158,10 @@ class Cell:
             'w': w,
             }
 
+        if pathway == 2:
+            self.LNKS_est['v_est_on'] = X[0][1,:] * w[0]
+            self.LNKS_est['v_est_off'] = X[1][1,:] * w[1]
+
 
     def LNK(self):
         '''
@@ -174,7 +180,8 @@ class Cell:
         st = normalize_stim(st)
 
         mp = self.mp
-        mp = normalize_0_1(mp)
+        # mp = normalize_0_1(mp)
+        mp = normalize_stim(mp)
 
         f, g, u, thetaK, X, v = _lnks.LNK(param, st, pathway)
 
@@ -189,42 +196,55 @@ class Cell:
             'w': w,
             }
 
+        if pathway == 2:
+            self.LNK_est['v_est_on'] = X[0][1,:] * w[0]
+            self.LNK_est['v_est_off'] = X[1][1,:] * w[1]
 
-    def Spiking(self, f, f_get_h, f_gain, theta):
+
+    def Spiking(self, theta, model):
         '''
         Computes Spiking model of the cell given the model f and theta
-
-        Input
-        -----
-        f (function):
-            The spiking model
-
-        f_get_h (function):
-            Get the internal variable h of the spiking model
-
-        f_gain (function):
-            Get the instantaneous gain of the spiking model
-
-        theta (ndarray):
-            The model parameter
 
         Output
         ------
         y (ndarray):
             The output of the spiking model (firing rate)
 
+        m (ndarray):
+
         h (ndarray):
             The internal variable h, which is the membrane potential added with feedback
 
         gain (ndarray):
             The instantaneous gain
+
+        fb (ndarray):
+
+        b (ndarray):
         '''
-        mp = self.mp - _np.min(self.mp)
-        mp = mp / _np.max(mp)
+        if model.lower() in ['lnks', 'lnks_mp']:
+            mp = self.LNKS_est['v_est']
 
-        self.est = f(theta, mp)
+        elif model.lower() == 'spiking':
+            mp = normalize_stim(self.mp)
 
-        ### need to be implemented
+        else:
+            raise ValueError('model error')
+
+        dv = _sb.deriv(mp, 0.001)
+        m = _st.SC1DF_get_m(theta, mp, dv)
+        r, h, gain, fb, b = _sb.SC1DF(theta, mp)
+
+        self.Spiking_est = {
+            'r': normalize_0_1(self.fr),
+            'r_est': r,
+            'm': m,
+            'h': h,
+            'gain': gain,
+            'fb': fb,
+            'b': b,
+        }
+
 
     def summary(self, model):
         '''
@@ -715,7 +735,7 @@ def get_data(cell, model, options):
         mp_train = mp
         fr_train = fr
 
-    if model.lower() in ["spiking", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
+    if model.lower() in ["spiking", "spiking_thr", "sci", "sc", "scif", "scf", "scie", "sc1d", "scief", "sdf", "scif2", "sc1df", "sc1df_1"]:
         '''
         Fitting Spiking Blocks
         '''
