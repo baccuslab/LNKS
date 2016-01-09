@@ -32,6 +32,7 @@ models = {
     "LNKS_MP": lnks_t.LNKS,
     "Spiking": sb.SC1DF_C,
     "Spiking_est": sb.SC1DF_C,
+    "Spiking_thr": sb.SC1D,
     }
 
 objectives = {
@@ -40,6 +41,7 @@ objectives = {
     "LNKS_MP": lnks_t.LNKS_fobj,
     "Spiking": sb.SC1DF_fobj,
     "Spiking_est": sb.SC1DF_fobj,
+    "Spiking_thr": sb.SC1D_fobj,
     }
 
 bounds = {
@@ -48,6 +50,7 @@ bounds = {
     "LNKS_MP": lnks.LNKS_bnds,
     "Spiking": sb.SC1DF_bnds,
     "Spiking_est": sb.SC1DF_bnds,
+    "Spiking_thr": sb.SC1D_bnds,
     }
 
 # Set Initial Path
@@ -81,6 +84,8 @@ def main():
     else:
         options['is_grad'] = False
 
+    options['MAX_ITER'] = 1
+
     # fit model
     cell = fit(cell_num, model, objective, init_num, np.int(num_optims), options)
 
@@ -102,6 +107,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     num_optims (int):
         Number of optimization repeated.
         One optimization is MAX_ITER iteration(step gradient).
+        MAX_ITER is maximum number of iterations for one step forward using scipy minimize.
         Total iteration would be Tot_Iter = MAX_ITER * num_optims
         This way, the optimization process can keep track of intermediate
         cost values, cross-validation(test values) values, and other intermediate
@@ -150,7 +156,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     thetas[0,:] = theta_init
 
     # compute initial objective value and correlation coefficient
-    fun_train, cc_train, evar_train = compute_func_values(cell,theta_init,model,fobj, f,options, True)
+    fun_train, cc_train, evar_train = compute_func_values(cell,theta_init,model,fobj, f, options, True)
     fun_test, cc_test, evar_test = compute_func_values(cell,theta_init,model, fobj,f, options, False)
 
     # Run Optimization
@@ -189,7 +195,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
 
     print("\n")
     save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
-    if model.lower() in ['spiking','spiking_est']:
+    if model.lower() in ['spiking','spiking_est','spiking_thr']:
         np.savetxt(cell_num+'_'+init_num[1]+'_theta.csv', thetas, delimiter=",")
     else:
         np.savetxt(cell_num+'_'+init_num[0]+'_theta.csv', thetas, delimiter=",")
@@ -213,7 +219,7 @@ def save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, ev
     cell.result["corrcoef_test"] = cc_test
     cell.result["evar_test"] = evar_test
 
-    if model.lower() in ['spiking','spiking_est']:
+    if model.lower() in ['spiking','spiking_est','spiking_thr']:
         cell.saveresult(cell_num+'_'+init_num[1]+'_results.pickle')
     else:
         cell.saveresult(cell_num+'_'+init_num[0]+'_results.pickle')
@@ -317,7 +323,7 @@ def get_initial(model, init_num):
         filename = PATH_INITIAL_LNK + init_num[0] + '.initial'
         theta_init = get_initial_helper(filename)
 
-    elif model.lower() == "spiking":
+    elif model.lower() in ["spiking","spiking_thr"]:
         # S initials
         filename = PATH_INITIAL_S + init_num[1] + '.initial'
         theta_init = get_initial_helper(filename)
@@ -385,7 +391,7 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
     # if np.isnan(corrcoef_init) or (corrcoef_init is None):
     #     corrcoef_init = 0
 
-    if model.lower() in ['spiking','spiking_est']:
+    if model.lower() in ['spiking','spiking_est','spiking_thr']:
         fobject = open(cell_num+'_'+init_num_S+'_summary.txt', 'w')
     else:
         fobject = open(cell_num+'_'+init_num_LNK+'_summary.txt', 'w')
