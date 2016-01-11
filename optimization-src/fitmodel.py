@@ -90,7 +90,7 @@ def main():
     cell = fit(cell_num, model, objective, init_num, np.int(num_optims), options)
 
     # print results
-    print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_num_S, num_optims, crossval, is_grad)
+    print_results(cell, cell_num, model, objective, np.int(pathway), init_num_LNK, init_num_S, num_optims, crossval, is_grad)
 
 
 
@@ -197,6 +197,8 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
     if model.lower() in ['spiking','spiking_est','spiking_thr']:
         np.savetxt(cell_num+'_'+init_num[1]+'_theta.csv', thetas, delimiter=",")
+    elif model.lower() in ['lnks', 'lnks_mp']:
+        np.savetxt(cell_num+'_'+init_num[0]+'_'+init_num[1]+'_theta.csv', thetas, delimiter=",")
     else:
         np.savetxt(cell_num+'_'+init_num[0]+'_theta.csv', thetas, delimiter=",")
     # df.to_csv(cell_num+'.csv', sep='\t')
@@ -221,6 +223,8 @@ def save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, ev
 
     if model.lower() in ['spiking','spiking_est','spiking_thr']:
         cell.saveresult(cell_num+'_'+init_num[1]+'_results.pickle')
+    elif model.lower() in ['lnks', 'lnks_mp']:
+        cell.saveresult(cell_num+'_'+init_num[0]+'_'+init_num[1]+'_results.pickle')
     else:
         cell.saveresult(cell_num+'_'+init_num[0]+'_results.pickle')
 
@@ -393,6 +397,16 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
 
     if model.lower() in ['spiking','spiking_est','spiking_thr']:
         fobject = open(cell_num+'_'+init_num_S+'_summary.txt', 'w')
+    elif model.lower() in ['lnks', 'lnks_mp']:
+        mp_est, fr_est = lnks.LNKS_MP_f(cell.result['theta'], cell.stim, pathway)
+        mp = ccls.normalize_stim(cell.mp)
+        cc_mp = stats.corrcoef(mp, mp_est)
+        ev_mp = stats.variance_explained(mp, mp_est)
+        if np.isnan(cc_mp) or (cc_mp is None):
+            cc_mp = 0
+        if np.isnan(ev_mp) or (ev_mp is None):
+            ev_mp = 0
+        fobject = open(cell_num+'_'+init_num_LNK+'_'+init_num_S+'_summary.txt', 'w')
     else:
         fobject = open(cell_num+'_'+init_num_LNK+'_summary.txt', 'w')
     fobject.write("\nFit cell " + cell_num + "\n")
@@ -414,6 +428,9 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
     fobject.write("\t explained variance train: " + str(evar) + "\n")
     fobject.write("\t correlation coefficient test: " + str(corrcoef_test) + "\n")
     fobject.write("\t explained variance test: " + str(evar_test) + "\n")
+    if model.lower() in ['lnks', 'lnks_mp']:
+        fobject.write("\t correlation coefficient mp: " + str(cc_mp) + "\n")
+        fobject.write("\t explained variance mp: " + str(ev_mp) + "\n")
     fobject.close()
 
 
