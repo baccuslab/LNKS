@@ -267,10 +267,12 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
         bnd_LNK = LNK_bnds(pathway=pathway)
         bnds = bnd_LNK + bnd_S
 
-        bnds.pop(8)
-        bnds.insert(8, (theta[8],theta[8]))
-        bnds.pop(18)
-        bnds.insert(18, (theta[18],theta[18]))
+        l_bnds = list(bnds)
+        l_bnds.pop(8)
+        l_bnds.insert(8, (theta[8],theta[8]))
+        l_bnds.pop(18)
+        l_bnds.insert(18, (theta[18],theta[18]))
+        bnds = tuple(l_bnds)
 
     return bnds
 
