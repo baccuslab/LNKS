@@ -67,7 +67,7 @@ def main():
     '''
 
     # get environmental variables
-    cell_num, model, objective, pathway, init_num_LNK, init_num_S, num_optims, crossval, is_grad = get_env()
+    cell_num, model, objective, pathway, init_num_LNK, init_num_S, num_optims, crossval, is_grad, bnd_mode = get_env()
     init_num = (init_num_LNK, init_num_S)
 
     options = {}
@@ -85,6 +85,7 @@ def main():
         options['is_grad'] = False
 
     options['MAX_ITER'] = 1
+    options['bnd_mode'] = np.int(bnd_mode)
 
     # fit model
     cell = fit(cell_num, model, objective, init_num, np.int(num_optims), options)
@@ -134,10 +135,12 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     f = models[model]
     fobj = objectives[objective]
     bnds = bounds[model]
-    bound = bnds(pathway=options['pathway'])
 
     # get initials
     theta_init = get_initial(model, init_num)
+
+    # set boundary
+    bound = bnds(theta=theta_init, pathway=options['pathway'], bnd_mode=options['bnd_mode'])
 
     # For the case of Spiking_est model(using LNK output as an input to Spiking model)
     # need to compute v_est in advance and put it in to the cell class.
@@ -303,7 +306,7 @@ def get_env():
     '''
     Assigning input environmental variables to parameters
     '''
-    return sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],  sys.argv[5],  sys.argv[6],  sys.argv[7],  sys.argv[8],  sys.argv[9]
+    return sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],  sys.argv[5],  sys.argv[6],  sys.argv[7],  sys.argv[8],  sys.argv[9],  sys.argv[10]
 
 
 def get_initial(model, init_num):

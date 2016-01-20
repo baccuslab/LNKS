@@ -37,6 +37,7 @@ num_optims=1
 pathway=1
 crossval=True
 is_grad=True
+bnd_mode=0
 
 function start_fit {
     # start_fit 
@@ -45,15 +46,15 @@ function start_fit {
     if [ "$model" = "Spiking" ] || [ "$model" = "Spiking_est" ];then
         # echo "$model is Spiking"
         # Save output using the $init_num_S variable
-        nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad > $1.$3.out
+        nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad $bnd_mode > $1.$3.out
     elif [ "$model" = "LNKS" ] || [ "$model" = "LNKS_MP" ];then
         # echo "$model is Spiking"
         # Save output using the $init_num_S variable
-        nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad > $1.$2.$3.out
+        nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad $bnd_mode  > $1.$2.$3.out
     else
         # echo "$model is LNKS"
         # Save output using the $init_num_LNK variable
-        nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad > $1.$2.out
+        nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad $bnd_mode  > $1.$2.out
     fi
 
 }

@@ -229,17 +229,18 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
         0: fit LNKS model
         1: fit LNK (S fixed)
         2: fit S (LNK fixed)
+        5: fit LNKS model with fixed N threshold and S threshold.
 
         this is used with fitmodel.py (3x-optim/LNKS/program/)
     '''
 
     if bnd_mode == 0:
         bnd_S = _sb.SC1DF_bnds()
-        bnd_LNK = LNK_bnds(pathway)
+        bnd_LNK = LNK_bnds(pathway=pathway)
         bnds = bnd_LNK + bnd_S
 
     elif bnd_mode == 1:
-        bnd_LNK = LNK_bnds(pathway)
+        bnd_LNK = LNK_bnds(pathway=pathway)
         if pathway == 1:
             bnd_S = tuple([(theta[i],theta[i]) for i in range(18,theta.size)])
         elif pathway == 2:
@@ -259,6 +260,17 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
 
         bnd_S = _sb.SC1DF_bnds()
         bnds = bnd_LNK + bnd_S
+
+    elif bnd_mode == 5:
+        # fix the boundary of the threshold parameters of Nonlinearity and Spiking block
+        bnd_S = _sb.SC1DF_bnds()
+        bnd_LNK = LNK_bnds(pathway=pathway)
+        bnds = bnd_LNK + bnd_S
+
+        bnds.pop(8)
+        bnds.insert(8, (theta[8],theta[8]))
+        bnds.pop(18)
+        bnds.insert(18, (theta[18],theta[18]))
 
     return bnds
 
@@ -456,7 +468,7 @@ def LNK_fobj_helper(LNK_f, theta, stim, y, options):
     return J
 
 
-def LNK_bnds(pathway=1):
+def LNK_bnds(theta=None, pathway=1, bnd_mode=0):
     '''
     Return boundaries for LNK model optimization
     '''

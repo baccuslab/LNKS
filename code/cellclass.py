@@ -233,7 +233,7 @@ class Cell:
 
         dv = _sb.deriv(mp, 0.001)
         m = _st.SC1DF_get_m(theta, mp, dv)
-        r, h, gain, fb, b = _sb.SC1DF(theta, mp)
+        r, h, gain, fb, b, m = _sb.SC1DF(theta, mp)
 
         self.Spiking_est = {
             'r': normalize_0_1(self.fr),

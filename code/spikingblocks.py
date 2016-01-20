@@ -284,6 +284,7 @@ def SC1DF(theta, x_in, options=None):
 
     y = _st.SC1DF(theta, x_in, dx_in)
     h = _st.SC1DF_get_h(theta, x_in, dx_in)
+    m = _st.SC1DF_get_m(theta, x_in, dx_in)
     gain = _st.SC1DF_gain(theta, x_in, dx_in)
 
     b = h - x_in
@@ -298,7 +299,7 @@ def SC1DF(theta, x_in, options=None):
     # fb = (fb1 + fb2)/2 + fb3
     fb = (fb1 + fb2)/2
 
-    return y, h, gain, fb, b
+    return y, h, gain, fb, b, m
 
 def SC1DF_C(theta, x_in, options=None):
     '''
@@ -379,7 +380,7 @@ def SC1DF_fobj_helper(f, theta, stim, y, options):
 
     return J
 
-def SC1DF_bnds(pathway=None):
+def SC1DF_bnds(theta=None, pathway=None, bnd_mode=0):
     '''
     return SCIF bound constraints.
     '''
