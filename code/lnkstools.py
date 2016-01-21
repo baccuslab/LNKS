@@ -263,6 +263,8 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
 
     elif bnd_mode == 5:
         # fix the boundary of the threshold parameters of Nonlinearity and Spiking block
+        # this is just for one pathway model.
+        # need to implement for two pathway model.
         bnd_S = _sb.SC1DF_bnds()
         bnd_LNK = LNK_bnds(pathway=pathway)
         bnds = bnd_LNK + bnd_S
@@ -270,6 +272,8 @@ def LNKS_bnds(theta=None, pathway=1, bnd_mode=0):
         l_bnds = list(bnds)
         l_bnds.pop(8)
         l_bnds.insert(8, (theta[8],theta[8]))
+        l_bnds.pop(9)
+        l_bnds.insert(9, (theta[9],theta[9]))
         l_bnds.pop(18)
         l_bnds.insert(18, (theta[18],theta[18]))
         bnds = tuple(l_bnds)
