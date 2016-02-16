@@ -297,13 +297,13 @@ def mutualInfo_adaptiveIndex(N_thrs, S_thrs, theta, stim, contrast, fr):
     return MIs, MIs_bps, AIs
 
 
-def mutualInfo_adaptiveIndex_cells(results_LNKS, keys, N_thrs, S_thrs):
+def mutualInfo_adaptiveIndex_cells(cells, keys, N_thrs, S_thrs):
     MIs = []
     MIs_bps = []
     AIs = []
 
     for key in keys:
-        cell = results_LNKS.cells[key]
+        cell = cells[key]
         stim = cell.stim
         fr = cell.fr
         contrast = cell.contrast
