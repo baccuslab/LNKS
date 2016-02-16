@@ -24,10 +24,6 @@ created: 2016-02-01
 '''
 
 import numpy as _np
-from matplotlib import pyplot as _plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable as _mal
-import matplotlib.patches as _mpatches
-import plottools as _pt
 import pdb
 from scipy.stats import poisson as _poisson
 import dataprocesstools as _dpt
