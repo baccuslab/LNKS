@@ -119,7 +119,7 @@ def highpassfilter(mp, fc):
     mask[:fc+1] = 0
     mask[-fc:] = 0
 
-    mp_high = _np.fft.ifft(X*mask, N) 
+    mp_high = _np.fft.ifft(X*mask, N)
     mp_high = mp_high[:mp.size]
 
     return mp_high

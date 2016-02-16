@@ -94,7 +94,7 @@ def SG_fobj(theta, x_in, y):
 '''
     Spiking Continuous 1-D (SC1D) model (1-D approximation of higher order firing rate model).
 '''
-def SC1D(theta, x_in, options):
+def SC1D(theta, x_in, options=None):
     '''
     Spiking Continuous 1-D model.
     Compute the very basic continuous 1D nonlinearity(sigmoid) spiking block.
@@ -129,7 +129,7 @@ def SC1D(theta, x_in, options):
 '''
     Spiking Continuous 1-D (SC1D) objective functions, gradient, gain
 '''
-def SC1D_fobj(theta, x_in, y, options):
+def SC1D_fobj(theta, x_in, y, options=None):
     '''
     Objective function and its gradient
     Likelihood objective function and its gradient of Spiking Continuous(SC) spiking model.

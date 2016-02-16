@@ -7,6 +7,8 @@ author: Bongsoo Suh
 created: 2015-02-26
 updated: 2015-12-04
     - using model and objective in fast_lnks_objective
+updated: 2016-01-21
+    - added fit_line method
 
 (C) 2015 bongsoos
 '''
@@ -105,3 +107,35 @@ def optimize(fobj, f, theta, data, bnds=None, options=None):
         "jac": jac}
 
     return result
+
+
+from numpy.linalg import inv as _inv
+from numpy import dot as _dot
+
+def fit_line(x, y):
+    '''
+    fit a line to data (x, y)
+    line defined by: y = offset + slope * x
+    where, offset and slope are the parameters
+
+    Input
+    -----
+    x (ndarray)
+    y (ndarray)
+
+    return theta(offset and slope)
+
+    '''
+
+    X = _np.ones([2, x.size])
+    X[1,:] = x
+    XXinv = _inv(_dot(X, X.T))
+    b = _dot(X, y)
+
+    theta = _dot(XXinv, b)
+
+    y_est = theta[0] + theta[1] * x
+
+    return y_est, theta
+
+
