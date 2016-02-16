@@ -27,7 +27,6 @@ import numpy as _np
 import pdb
 from scipy.stats import poisson as _poisson
 import dataprocesstools as _dpt
-import infotools as _ift
 import objectivetools as _obj
 import lnkstools as _lnks
 import optimizationtools as _ot
