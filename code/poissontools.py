@@ -289,6 +289,8 @@ def mutualInfo_adaptiveIndex(N_thrs, S_thrs, theta, stim, contrast, fr):
                 fr_est_temp_ = fr_est_temp[k*SEC_LENGTH + OFFSET:(k+1)*SEC_LENGTH]
                 LN_est_ln, L_est_ln, f_ln, theta_ln, LNresult = _at.LN_model(stim_, fr_est_temp_, num_bins=50)
                 gain_changes[k] = theta_ln[1]
+                if _np.sum(LN_est_ln) == 0:
+                    gain_changes[k] = EPS
 
             c_avg, AI_avg = _at.get_avg_contrast(x_contrast, gain_changes[idx_contrast])
             line_est, line_theta = _ot.fit_line(c_avg[1:], AI_avg[1:]/AI_avg[-1])
