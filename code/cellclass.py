@@ -158,10 +158,19 @@ class Cell:
             'w': w,
             }
 
-        if pathway == 2:
+        if pathway == 1:
+            theta_S = param[18:]
+
+        elif pathway == 2:
             self.LNKS_est['v_est_on'] = X[0][1,:] * w[0]
             self.LNKS_est['v_est_off'] = X[1][1,:] * w[1]
+            theta_S = param[36:]
 
+        r, h, gain, fb, b, m = _sb.SC1DF(theta_S, v)
+        self.LNKS_est['h'] = h
+        self.LNKS_est['b'] = b
+        self.LNKS_est['m'] = m
+        self.LNKS_est['fb'] = fb
 
     def LNK(self):
         '''
