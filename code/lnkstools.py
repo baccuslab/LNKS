@@ -196,6 +196,8 @@ def LNKS_MP_fobj_helper(f, theta, stim, y_data, options):
     -------
         J: objective value
     '''
+    gamma = options['gamma']
+
     # data
     y_mp = y_data[0]
     y_fr = y_data[1]
@@ -209,7 +211,7 @@ def LNKS_MP_fobj_helper(f, theta, stim, y_data, options):
     J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
     J_fr = J_fr_poss + J_fr_mse
 
-    J = J_mp + J_fr
+    J = (1-gamma) * J_mp + gamma * J_fr
 
     return J
 
