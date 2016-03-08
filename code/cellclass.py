@@ -240,8 +240,8 @@ class Cell:
         else:
             raise ValueError('model error')
 
-        dv = _sb.deriv(mp, 0.001)
-        m = _st.SC1DF_get_m(theta, mp, dv)
+        # dv = _sb.deriv(mp, 0.001)
+        # m = _st.SC1DF_get_m(theta, mp, dv)
         r, h, gain, fb, b, m = _sb.SC1DF(theta, mp)
 
         self.Spiking_est = {

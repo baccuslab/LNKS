@@ -10,6 +10,7 @@
 void SC1DF(double *p, double *v, double *dv, double *r, int N); 
 void SC1DF_gain(double *p, double *v, double *dv, double *r, double *gain, int N); 
 void SC1DF_get_h(double *p, double *v, double *dv, double *r, double *h, int N); 
+void SC1DF_get_m(double *p, double *v, double *dv, double *r, double *h, int N); 
 
 /*
  * SCIF
