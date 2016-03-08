@@ -20,6 +20,7 @@ import spikingblocks as _sb
 import objectivetools as _obj
 import time as _time
 import multiprocessing as _mult
+import pdb as _pdb
 
 
 def LNKS_fobj(theta, stim, y, options):
@@ -71,16 +72,17 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
     '''
 
     model = options['model']
+    len_section=20000
 
     if model == 'LNK':
         y_est = f(theta, stim, options)
-        J = _obj.mse_weighted_loss(y, y_est, len_section=10000, weight_type='std')
+        J = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='std')
 
     elif model == 'LNKS':
         y_est = f(theta, stim, options)
         # linear combination of objective functions
-        J_mse = _obj.mse_weighted_loss(y, y_est, len_section=10000, weight_type='mean')
-        J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+        J_mse = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='mean')
+        J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=len_section, weight_type="mean")
         J = J_poss + J_mse
 
     elif model == 'LNKS_MP':
@@ -89,9 +91,9 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
         y_fr = y[1]
         y_mp_est, y_fr_est = f(theta, stim, options)
         # linear combination of objective functions
-        J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=10000, weight_type="std")
-        J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
-        J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
+        J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="std")
+        J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
+        J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
         J_fr = J_fr_poss + J_fr_mse
         J = J_mp + J_fr
 

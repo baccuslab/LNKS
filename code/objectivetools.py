@@ -246,5 +246,6 @@ def perturbed_thetas(theta, h):
 def add(theta, h, i):
     temp = _np.zeros(theta.size)
     temp[i] = h
-    return (theta + temp)
+    theta_perturbed = theta + temp
+    return theta_perturbed
 
