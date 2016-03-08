@@ -134,9 +134,10 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
 
     y_est = f(theta, stim, options['pathway'])
 
+    len_section = 20000 # 10000
     # linear combination of objective functions
-    J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
-    J_mse = _obj.mse_weighted_loss(y, y_est, len_section=10000, weight_type="mean")
+    J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=len_section, weight_type="mean")
+    J_mse = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type="mean")
     J = J_poss + J_mse
 
     return J
@@ -205,10 +206,11 @@ def LNKS_MP_fobj_helper(f, theta, stim, y_data, options):
     # model output
     y_mp_est, y_fr_est = f(theta, stim, options['pathway'])
 
+    len_section = 20000 # 10000
     # linear combination of objective functions
-    J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=10000, weight_type="std")
-    J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
-    J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=10000, weight_type="mean")
+    J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="std")
+    J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
+    J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
     J_fr = J_fr_poss + J_fr_mse
 
     J = (1-gamma) * J_mp + gamma * J_fr
