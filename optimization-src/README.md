@@ -23,14 +23,16 @@ An example of environmental variables setup is shown below:
     $ pathway=2
     $ crossval=True
     $ is_grad=True
+    $ bnd_mode=0
+    $ gamma=0.5
 
 Run `fitmodel.py`. Examples are shown below.
 
 Simple Run:
 
-    $ ./fitmodel.py  $cell_num $model $objective $pathway $init_num_LNK $init_num_S $num_optims $crossval $is_grad
+    $ ./fitmodel.py  $cell_num $model $objective $pathway $init_num_LNK $init_num_S $num_optims $crossval $is_grad $bnd_mode $gamma
 
 Run long jobs in background and save printed results to a file.
 
-    $ nohup ./fitmodel.py  $cell_num $model $objective $pathway $init_num_LNK $init_num_S $num_optims $crossval $is_grad > $cell_num.$init_num_LNK.out &
+    $ nohup ./fitmodel.py  $cell_num $model $objective $pathway $init_num_LNK $init_num_S $num_optims $crossval $is_grad $bnd_mode $gamma > $cell_num.$init_num_LNK.out &
 
