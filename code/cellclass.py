@@ -781,6 +781,15 @@ def get_data(cell, model, options):
 
         data = (mp_train, fr_train, options)
 
+    elif model.lower() == "lnk_fr":
+        '''
+        Fitting LNK model to the firing rate.
+        '''
+        gwin_len, gwin_std = 1000, 20
+        fr_ = _dpt.Spk2FR_1(cell.spike, gwin_len, gwin_std)
+        mp_est = normalize_stim(fr_)
+        data = (st_train, mp_est[:-20000], options)
+
     else:
         raise ValueError('The model name is not appropriate.')
 

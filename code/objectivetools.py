@@ -77,6 +77,8 @@ def mse_loss_helper(y, y_est, weight_type="std"):
         weight = _np.std(y) + 1e-6
     elif weight_type == "mean":
         weight = _np.mean(y) + 1e-3
+    elif weight_type == "none":
+        weight = 1
 
     J = mse_loss(y, y_est) / (weight**2)
 

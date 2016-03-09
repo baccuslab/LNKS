@@ -28,6 +28,7 @@ import time
 
 models = {
     "LNK": lnks_t.LNKS,
+    "LNK_fr": lnks_t.LNKS,
     "LNKS": lnks_t.LNKS,
     "LNKS_MP": lnks_t.LNKS,
     "Spiking": sb.SC1DF_C,
@@ -37,6 +38,7 @@ models = {
 
 objectives = {
     "LNK": lnks_t.LNKS_fobj,
+    "LNK_fr": lnks_t.LNKS_fobj,
     "LNKS": lnks_t.LNKS_fobj,
     "LNKS_MP": lnks_t.LNKS_fobj,
     "Spiking": sb.SC1DF_fobj,
@@ -46,6 +48,7 @@ objectives = {
 
 bounds = {
     "LNK": lnks.LNK_bnds,
+    "LNK_fr": lnks.LNK_bnds,
     "LNKS": lnks.LNKS_bnds,
     "LNKS_MP": lnks.LNKS_bnds,
     "Spiking": sb.SC1DF_bnds,
@@ -326,7 +329,7 @@ def get_initial(model, init_num):
         # combine LNK and S initials
         theta_init = np.concatenate((theta_init_LNK,theta_init_S),axis=0)
 
-    elif model.lower() == "lnk":
+    elif model.lower() in ["lnk", 'lnk_fr']:
         # LNK initials
         filename = PATH_INITIAL_LNK + init_num[0] + '.initial'
         theta_init = get_initial_helper(filename)

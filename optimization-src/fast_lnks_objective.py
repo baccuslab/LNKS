@@ -79,6 +79,10 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
         y_est = f(theta, stim, options)
         J = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='std')
 
+    elif model == 'LNK_fr':
+        y_est = f(theta, stim, options)
+        J = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='none')
+
     elif model == 'LNKS':
         y_est = f(theta, stim, options)
         # linear combination of objective functions
