@@ -72,6 +72,7 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
     '''
 
     model = options['model']
+    gamma = options['gamma']
     len_section=20000
 
     if model == 'LNK':
@@ -95,7 +96,7 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
         J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
         J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
         J_fr = J_fr_poss + J_fr_mse
-        J = J_mp + J_fr
+        J = (1-gamma) * J_mp + gamma * J_fr
 
     return J
 
