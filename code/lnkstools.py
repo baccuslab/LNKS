@@ -557,6 +557,13 @@ def Kinetics(p, Xinit, xinput):
 
     return X
 
+def Nonlinearity(theta, x_in):
+    '''
+    compute Nonlinearity function
+    '''
+    u = sigmoid(theta[0] + theta[1] * x_in)
+
+    return u
 
 def Spiking(theta, x_in):
     '''

@@ -75,28 +75,28 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
     gamma = options['gamma']
     len_section=20000
 
-    if model == 'LNK':
+    if model.lower() == 'lnk':
         y_est = f(theta, stim, options)
         J = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='std')
 
-    elif model == 'LNK_fr':
+    elif model.lower() == 'lnk_fr':
         y_est = f(theta, stim, options)
         J = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='none')
 
-    elif model == 'LNKS':
+    elif model.lower() == 'lnks':
         y_est = f(theta, stim, options)
         # linear combination of objective functions
         J_mse = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='mean')
         J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=len_section, weight_type="mean")
         J = J_poss + J_mse
 
-    elif model == 'LNKS_MP':
+    elif model.lower() in ['lnks_mp', 'lnks_spike']:
         # data
         y_mp = y[0]
         y_fr = y[1]
         y_mp_est, y_fr_est = f(theta, stim, options)
         # linear combination of objective functions
-        J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="std")
+        J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="none")
         J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
         J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
         J_fr = J_fr_poss + J_fr_mse
@@ -115,7 +115,7 @@ def LNKS(theta, stim, options):
     if pathway == 1:
         thetas = [theta[:17]]
         weights = [theta[17]]
-        if model in ['LNKS', 'LNKS_MP']:
+        if model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
             theta_S = theta[18:]
 
     # two pathway
@@ -125,7 +125,7 @@ def LNKS(theta, stim, options):
         theta_on = theta[:17]
         theta_off = theta[18:35]
         thetas = [theta_on, theta_off]
-        if model in ['LNKS', 'LNKS_MP']:
+        if model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
             theta_S = theta[36:]
         # weights
         w_on = theta[17]
@@ -152,13 +152,13 @@ def LNKS(theta, stim, options):
     output = sum([weights[i] * v_temp[i] for i in range(pathway)])
     output = output - _np.mean(output)
 
-    if model == 'LNKS':
+    if model.lower() == 'lnks':
         # Comptue Spiking model
         # spiking parameters following after LNK parameters
         output = _sb.SC1DF_C(theta_S, output)
 
         return output
-    elif model == 'LNKS_MP':
+    elif model.lower() in ['lnks_mp','lnks_spike']:
         # Comptue Spiking model
         # spiking parameters following after LNK parameters
         r = _sb.SC1DF_C(theta_S, output)

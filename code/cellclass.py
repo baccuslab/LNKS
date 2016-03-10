@@ -231,7 +231,7 @@ class Cell:
 
         b (ndarray):
         '''
-        if model.lower() in ['lnks', 'lnks_mp']:
+        if model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
             mp = self.LNKS_est['v_est']
 
         elif model.lower() == 'spiking':
@@ -374,7 +374,7 @@ class Cell:
 
             self.est = f(theta, data[0])
 
-        elif model.lower() in ["lnks", "lnks_mp"]:
+        elif model.lower() in ["lnks", "lnks_mp", "lnks_spike"]:
             '''
             Predicting LNKS model
             '''
@@ -789,6 +789,16 @@ def get_data(cell, model, options):
         fr_ = _dpt.Spk2FR_1(cell.spike, gwin_len, gwin_std)
         mp_est = normalize_stim(fr_)
         data = (st_train, mp_est[:-20000], options)
+
+    elif model.lower() == "lnks_spike":
+        '''
+        Fitting LNKS model using estimated membrane potential(smoothed firing rate) and firing rate as outputs
+        '''
+        gwin_len, gwin_std = 1000, 20
+        fr_ = _dpt.Spk2FR_1(cell.spike, gwin_len, gwin_std)
+        mp_est = normalize_stim(fr_)
+        outputs = [mp_est[:-20000], fr_train]
+        data = (st_train, outputs, options)
 
     else:
         raise ValueError('The model name is not appropriate.')

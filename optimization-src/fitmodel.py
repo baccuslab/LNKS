@@ -31,6 +31,7 @@ models = {
     "LNK_fr": lnks_t.LNKS,
     "LNKS": lnks_t.LNKS,
     "LNKS_MP": lnks_t.LNKS,
+    "LNKS_spike": lnks_t.LNKS,
     "Spiking": sb.SC1DF_C,
     "Spiking_est": sb.SC1DF_C,
     "Spiking_thr": sb.SC1D,
@@ -41,6 +42,7 @@ objectives = {
     "LNK_fr": lnks_t.LNKS_fobj,
     "LNKS": lnks_t.LNKS_fobj,
     "LNKS_MP": lnks_t.LNKS_fobj,
+    "LNKS_spike": lnks_t.LNKS_fobj,
     "Spiking": sb.SC1DF_fobj,
     "Spiking_est": sb.SC1DF_fobj,
     "Spiking_thr": sb.SC1D_fobj,
@@ -51,6 +53,7 @@ bounds = {
     "LNK_fr": lnks.LNK_bnds,
     "LNKS": lnks.LNKS_bnds,
     "LNKS_MP": lnks.LNKS_bnds,
+    "LNKS_spike": lnks.LNKS_bnds,
     "Spiking": sb.SC1DF_bnds,
     "Spiking_est": sb.SC1DF_bnds,
     "Spiking_thr": sb.SC1D_bnds,
@@ -204,7 +207,7 @@ def fit(cell_num, model, objective, init_num, num_optims, options):
     save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, evar_train,fun_test, cc_test, evar_test)
     if model.lower() in ['spiking','spiking_est','spiking_thr']:
         np.savetxt(cell_num+'_'+init_num[1]+'_theta.csv', thetas, delimiter=",")
-    elif model.lower() in ['lnks', 'lnks_mp']:
+    elif model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
         np.savetxt(cell_num+'_'+init_num[0]+'_'+init_num[1]+'_theta.csv', thetas, delimiter=",")
     else:
         np.savetxt(cell_num+'_'+init_num[0]+'_theta.csv', thetas, delimiter=",")
@@ -230,7 +233,7 @@ def save_results(cell, cell_num, model, init_num, theta, fun_train, cc_train, ev
 
     if model.lower() in ['spiking','spiking_est','spiking_thr']:
         cell.saveresult(cell_num+'_'+init_num[1]+'_results.pickle')
-    elif model.lower() in ['lnks', 'lnks_mp']:
+    elif model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
         cell.saveresult(cell_num+'_'+init_num[0]+'_'+init_num[1]+'_results.pickle')
     else:
         cell.saveresult(cell_num+'_'+init_num[0]+'_results.pickle')
@@ -289,7 +292,7 @@ def compute_func_values(cell, theta, model, fobj, f, options, istrain):
     else:
         fun = fobj(theta, data[0], data[1], options)
 
-    if model.lower() == 'lnks_mp':
+    if model.lower() in ['lnks_mp','lnks_spike']:
         y = data[1][1]
         v, y_est = f(theta, data[0], options)
     else:
@@ -317,7 +320,7 @@ def get_initial(model, init_num):
     '''
     Get the initial parameters for model optimization
     '''
-    if model.lower() in ["lnks", "lnks_mp"]:
+    if model.lower() in ["lnks", "lnks_mp", "lnks_spike"]:
         # LNK initials
         filename = PATH_INITIAL_LNK + init_num[0] + '.initial'
         theta_init_LNK = get_initial_helper(filename)
@@ -404,7 +407,7 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
 
     if model.lower() in ['spiking','spiking_est','spiking_thr']:
         fobject = open(cell_num+'_'+init_num_S+'_summary.txt', 'w')
-    elif model.lower() in ['lnks', 'lnks_mp']:
+    elif model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
         mp_est, fr_est = lnks.LNKS_MP_f(cell.result['theta'], cell.stim, pathway)
         mp = ccls.normalize_stim(cell.mp)
         cc_mp = stats.corrcoef(mp, mp_est)
@@ -435,7 +438,7 @@ def print_results(cell, cell_num, model, objective, pathway, init_num_LNK, init_
     fobject.write("\t explained variance train: " + str(evar) + "\n")
     fobject.write("\t correlation coefficient test: " + str(corrcoef_test) + "\n")
     fobject.write("\t explained variance test: " + str(evar_test) + "\n")
-    if model.lower() in ['lnks', 'lnks_mp']:
+    if model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
         fobject.write("\t correlation coefficient mp: " + str(cc_mp) + "\n")
         fobject.write("\t explained variance mp: " + str(ev_mp) + "\n")
     fobject.close()
