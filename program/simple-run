@@ -51,7 +51,7 @@ function start_fit {
         # echo "$model is Spiking"
         # Save output using the $init_num_S variable
         nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad $bnd_mode $gamma > $1.$3.out
-    elif [ "$model" = "LNKS" ] || [ "$model" = "LNKS_MP" ];then
+    elif [ "$model" = "LNKS" ] || [ "$model" = "LNKS_MP" ] || [ "$model" = "LNKS_spike" ];then
         # echo "$model is Spiking"
         # Save output using the $init_num_S variable
         nohup ./fitmodel.py  $1 $model $objective $pathway $2 $3 $num_optims $crossval $is_grad $bnd_mode $gamma > $1.$2.$3.out
