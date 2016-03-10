@@ -73,6 +73,7 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
 
     model = options['model']
     gamma = options['gamma']
+    beta = options['beta']
     len_section=20000
 
     if model.lower() == 'lnk':
@@ -88,7 +89,7 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
         # linear combination of objective functions
         J_mse = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type='mean')
         J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=len_section, weight_type="mean")
-        J = J_poss + J_mse
+        J = (1-beta) * J_mse + beta * J_poss
 
     elif model.lower() in ['lnks_mp', 'lnks_spike']:
         # data
@@ -96,11 +97,16 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
         y_fr = y[1]
         y_mp_est, y_fr_est = f(theta, stim, options)
         # linear combination of objective functions
-        J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="none")
+        if model.lower() == 'lnks_mp':
+            J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="std")
+        elif model.lower() == 'lnks_spike':
+            J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="none")
         J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
         J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
-        J_fr = J_fr_poss + J_fr_mse
+        J_fr = (1-beta) * J_fr_mse + beta * J_fr_poss
         J = (1-gamma) * J_mp + gamma * J_fr
+
+        # print('J_fr_poss: %10.2f, J_fr_mse: %10.2f, J_mp: %10.2f' %(0.25*J_fr_poss, 0.25*J_fr_mse, 0.5*J_mp))
 
     return J
 

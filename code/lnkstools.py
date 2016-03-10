@@ -132,13 +132,14 @@ def LNKS_fobj_helper(f, theta, stim, y, options):
     Weighted sum of log-likelihood and mean-square error
     '''
 
+    beta = options['beta']
     y_est = f(theta, stim, options['pathway'])
 
     len_section = 20000 # 10000
     # linear combination of objective functions
     J_poss = _obj.poisson_weighted_loss(y, y_est, len_section=len_section, weight_type="mean")
     J_mse = _obj.mse_weighted_loss(y, y_est, len_section=len_section, weight_type="mean")
-    J = J_poss + J_mse
+    J = (1-beta) * J_mse + beta * J_poss
 
     return J
 
@@ -198,6 +199,7 @@ def LNKS_MP_fobj_helper(f, theta, stim, y_data, options):
         J: objective value
     '''
     gamma = options['gamma']
+    beta = options['beta']
 
     # data
     y_mp = y_data[0]
@@ -211,7 +213,7 @@ def LNKS_MP_fobj_helper(f, theta, stim, y_data, options):
     J_mp = _obj.mse_weighted_loss(y_mp, y_mp_est, len_section=len_section, weight_type="std")
     J_fr_poss = _obj.poisson_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
     J_fr_mse = _obj.mse_weighted_loss(y_fr, y_fr_est, len_section=len_section, weight_type="mean")
-    J_fr = J_fr_poss + J_fr_mse
+    J_fr = (1-beta) * J_fr_mse + beta * J_fr_poss
 
     J = (1-gamma) * J_mp + gamma * J_fr
 
