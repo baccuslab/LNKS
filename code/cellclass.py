@@ -806,7 +806,7 @@ def get_data(cell, model, options):
     return data
 
 
-def normalize_stim(stim):
+def normalize_stim(stim, x_range=None):
     '''
     Normalize stimulus to have zero mean and maximum difference between max and min to be 1.
 
@@ -819,17 +819,21 @@ def normalize_stim(stim):
     st (ndarray): normalized stimulus
     '''
 
-    st = normalize_0_1(stim)
+    st = normalize_0_1(stim, x_range)
     st = st - _np.mean(st)
 
     return st
 
-def normalize_0_1(x):
+def normalize_0_1(x, x_range=None):
     '''
     Return x_norm, a normalized x to be between 0~1.
     '''
-    x_norm = x - _np.min(x)
-    x_norm = x_norm / _np.max(x_norm)
+    if x_range:
+        x_norm = x - _np.min(x[x_range])
+        x_norm = x_norm / _np.max(x_norm[x_range])
+    else:
+        x_norm = x - _np.min(x)
+        x_norm = x_norm / _np.max(x_norm)
 
     return x_norm
 
