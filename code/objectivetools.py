@@ -242,8 +242,12 @@ def numel_gradient(fobj, f, theta, x_in, y, J0, options):
     return grad
 
 
-def perturbed_thetas(theta, h):
-    return [add(theta, h, i) for i in range(theta.size)]
+def perturbed_thetas(theta, h, mode='default'):
+    if mode == 'default':
+        return [add(theta, h, i) for i in range(theta.size)]
+    elif mode == 'NKS':
+        theta_range = _np.arange(8,21)
+        return [add(theta, h, i) for i in theta_range]
 
 def add(theta, h, i):
     temp = _np.zeros(theta.size)
