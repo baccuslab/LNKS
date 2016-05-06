@@ -94,6 +94,22 @@ def LNKS_f(theta, stim, pathway=1):
     return r
 
 
+def LNKS_a(theta, stim, pathway=1):
+    if pathway == 1:
+        f, g, u, thetaK, X, v = LNK(theta[:18], stim, pathway)
+        r, h, gain, fb, b, m = _sb.SC1DF(theta[18:], v)
+
+    elif pathway == 2:
+        f, g, u, thetaK, X, v = LNK(theta[:36], stim, pathway)
+        r, h, gain, fb, b, m = _sb.SC1DF(theta[36:], v)
+
+    else:
+        raise ValueError('The pathway parameter should be 1 or 2')
+
+
+    return f, g, u, thetaK, X, v, r, h, gain, fb, b, m
+
+
 def LNKS_fobj(theta, stim, y, options):
     '''
     LNKS model objective function for using only firing rate as output
