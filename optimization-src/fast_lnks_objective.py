@@ -120,7 +120,7 @@ def LNKS(theta, stim, options):
     # one pathway
     if pathway == 1:
         thetas = [theta[:17]]
-        weights = _np.array([theta[17]], dtype=_np.float128)
+        weights = _np.array([theta[17]])
         if model.lower() in ['lnks', 'lnks_mp', 'lnks_spike']:
             theta_S = theta[18:]
 
@@ -136,7 +136,7 @@ def LNKS(theta, stim, options):
         # weights
         w_on = theta[17]
         w_off = theta[35]
-        weights = _np.array([w_on, w_off], dtype=_np.float128)
+        weights = _np.array([w_on, w_off])
     else:
         raise ValueError('The pathway parameter should be 1 or 2')
 
@@ -150,7 +150,7 @@ def LNKS(theta, stim, options):
     thetaK = [_np.array(thetas[i][basis.shape[1]+2:]) for i in range(pathway)]
     X0 = _np.array([0.1,0.2,0.7,99]) # Initial Kinetics states
     X = [_kb.K4S_C(thetaK[i], X0, u[i]) for i in range(pathway)]
-    v_temp = [_np.array(X[i][1,:], dtype=_np.float128) for i in range(pathway)]
+    v_temp = [_np.array(X[i][1,:]) for i in range(pathway)]
     # v_temp = [v_temp[i] - _np.min(v_temp[i]) for i in range(pathway)]
     # v_temp = [v_temp[i]/ _np.max(v_temp[i]) for i in range(pathway)]
 
