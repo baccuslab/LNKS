@@ -575,6 +575,20 @@ def Kinetics(p, Xinit, xinput):
 
     return X
 
+def LinearFilter(theta, stim):
+    '''
+    apply Linear filter to the stimulus and return filtered stimulus
+    '''
+    nzstim = stim - _np.mean(stim) # nzstim: mean subtracted stimulus
+    lenStim = nzstim.size
+    basis = LinearFilterBasis_8param()
+
+    f = basis.dot(theta)
+    g = _np.convolve(nzstim, f)
+    g = g[:lenStim]
+
+    return g
+
 def Nonlinearity(theta, x_in):
     '''
     compute Nonlinearity function
