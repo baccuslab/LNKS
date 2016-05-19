@@ -246,7 +246,7 @@ def perturbed_thetas(theta, h, mode='default'):
     if mode == 'default':
         return [add(theta, h, i) for i in range(theta.size)]
     elif mode == 'NKS':
-        theta_range = _np.arange(8,21)
+        theta_range = _np.arange(8,theta.size)
         return [add(theta, h, i) for i in theta_range]
 
 def add(theta, h, i):
