@@ -33,3 +33,17 @@ def variance_explained(y, y_est):
     R2 = 1 - RSS/SYY
 
     return R2
+
+def cov(X):
+    '''
+    Compute covariance matrix
+
+    X (numpy array): mxn data matrix(each column feature, each row is one data point)
+    '''
+
+    mu = _np.array([list(_np.mean(X, axis=0))]*X.shape[0])
+    B = X-mu
+
+    c = _np.dot(B.T, B) / (X.shape[0]-1)
+
+    return c
