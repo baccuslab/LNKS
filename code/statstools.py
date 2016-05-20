@@ -10,7 +10,7 @@ created: 2015-03-08
 '''
 
 import numpy as _np
-
+from numpy.linalg import _eig
 
 def corrcoef(x, y):
     '''
@@ -38,12 +38,18 @@ def cov(X):
     '''
     Compute covariance matrix
 
+    mean subtraction, and variance normalization
     X (numpy array): mxn data matrix(each column feature, each row is one data point)
     '''
 
     mu = _np.array([list(_np.mean(X, axis=0))]*X.shape[0])
     B = X-mu
-
-    c = _np.dot(B.T, B) / (X.shape[0]-1)
+    sigma = _np.sqrt(_np.var(B, axis=0))
+    Bn = B/_np.outer(_np.ones(B.shape[0]), sigma)
+    c = _np.dot(Bn.T, Bn) / (Bn.shape[0]-1)
 
     return c
+
+def pca(X):
+    d, v = _eig(cov(X))
+    return v, d
